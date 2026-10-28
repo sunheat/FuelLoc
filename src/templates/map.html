@@ -2,32 +2,26 @@
 <html xmlns="http://www.w3.org/1999/html">
 
 <head>
-    <title>GeoPort</title>
+    <title>FuelLoc</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/babel-polyfill@latest/dist/polyfill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-providers@2.0.0/leaflet-providers.min.js"></script>
-    <script src="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/leaflet-geojson-export@2.1.1/dist/leaflet-geojson-export.min.js"></script> -->
-    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-filelayer@1.2.0/src/leaflet.filelayer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js" integrity="sha384-u5N8qJeJOO2iqNjIKTdl6KeKsEikMAmCUBPc6sC6uGpgL34aPJ4VgNhuhumedpEk" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-providers@2.0.0/leaflet-providers.min.js" integrity="sha384-uFuiSXrxXP9EEpO4Ygj61YrybGCnwZHvbh9ZRY4vivVF28JYo8jHV2sKYPzK4Zso" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.umd.js" integrity="sha384-Uq80a0t9n6BA6vtncUS3TmlN2fAN/sTtyMUPxcHoWYyN3ady1FdqisXohEzMdGCR" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js" integrity="sha384-FlFKgUqOEwuywgVc0+0QrDWcRsIzuyedLe+yUpC1jG4WgtdhJGvWf9mKm6GShpJv" crossorigin="anonymous"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js' integrity='sha384-qhsiITse/qx9/hyk3zeRbeTDEY+UNlaJoJyxV2JWlaLiXMjwZ1BP7nmri1/EyzLV' crossorigin='anonymous'></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-filelayer@1.2.0/src/leaflet.filelayer.min.js" integrity="sha384-klnzIz70BaQ2Gecbfjp2J0i7uNRV19nxRujIPUZ9TB4H6HRQ77eu6Q7SiRPGz6hC" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js" integrity="sha384-zrm1q65LH2XNQGGAMh01YoazIXTG9/85F1roc3oVY/fnVsX8S9LaDuf3eEIGsuWl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.js" integrity="sha384-LNpIHxlb97p7/oBsvu+2xKyN4wx8L43hCyeLj3ePJyZUrIwqcNAVLNpsIr/A6nyF" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" integrity="sha384-b8ANgTJvdlAnWM5YGMpKn7Kodm+1k7NYNG9zdjTCcZcKatzYHwZ0RLdWarbJJVzU" crossorigin="anonymous" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
-    <link href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.css" rel="stylesheet">
-    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.css" integrity="sha384-i/fL7cD99hJQv8k4OEusfzDIysmVclOz2/prDks10NS+MyksfRHG8L51PwSUTcR3" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI" crossorigin="anonymous"/>
+    <link href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.css" integrity="sha384-LPUNCWg49da7uwhxC+nHzBZ064MpkGVLaHhjTZcosrwGDrLwuZBlva8IKbX6aIgk" crossorigin="anonymous" rel="stylesheet">
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" integrity="sha384-vNhcrEMPkKG6l3cUAUkZp042GDOa4n8sjJI1l/yu7gt1ApVQC8/QS8s0Lekrg+Yp" crossorigin="anonymous" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.css" integrity="sha384-HLz8tjUbckCtYXWfcHFsWHGswBsaXEEPHaHPiraWuQ3YunjkiGH0kUmE3K1bSkIz" crossorigin="anonymous" rel="stylesheet">
 
 
     <style>
@@ -262,9 +256,9 @@ body.dark-mode .modal-footer button {
 <p><br></p>
 
 <div class="d-flex flex-column align-items-center flex-md-row container">
-    <h4 class="my-0 mx-auto font-weight-normal">GeoPort - Your location, Anywhere!</h4>
-    <a id="about-btn" class="btn btn-outline-primary pl-4 pr-4" href="#" title="GeoPort" style="display: none;">About</a>
-    <a id="exit-btn" class="btn btn-outline-primary pl-4 pr-4 ml-4" href="#" title="GeoPort" onclick="exitApp()">Exit</a>
+    <h4 class="my-0 mx-auto font-weight-normal">FuelLoc - Your location, anywhere!</h4>
+    <a id="about-btn" class="btn btn-outline-primary pl-4 pr-4" href="#" title="FuelLoc" style="display: none;">About</a>
+    <a id="exit-btn" class="btn btn-outline-primary pl-4 pr-4 ml-4" href="#" title="FuelLoc" onclick="exitApp()">Exit</a>
 </div>
 
 
@@ -523,33 +517,6 @@ L.leafletMenu = function(a, b) {
     console.log("App Version: ", appVersionNum);
     console.log("App Type: ", appVersionType);
     console.log("Platform: ", selectedDevicePlatform);
-
-      // Record app_visit when the page loads
-      //document.addEventListener('DOMContentLoaded', () => recordEvent('beta_visit'));
-
-      async function recordEvent(eventName) {
-        const apiUrl = 'https://api.geoport.me/';
-
-        try {
-          const response = await fetch(apiUrl + selectedDevicePlatform, {
-            mode: 'no-cors',
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              path: window.location.pathname,
-              [eventName]: true,
-            }),
-          });
-
-          if (!response.ok) {
-            console.error('Failed to record event:', response.status, response.statusText);
-          }
-        } catch (error) {
-          console.error('Error recording event:', error.message);
-        }
-      }
 
     // Function to toggle Dark Mode
     function toggleDarkMode() {
@@ -1888,48 +1855,6 @@ function populateDeviceList() {
         }
     }
 
-    // Define an asynchronous function to update DynamoDB
-    async function updateDynamoDB(selectedDeviceIdentifier, selectedDeviceVersion, selectedDeviceName, selectedDeviceClass, selectedDevicePlatform, appVersionNum, appType, selectedDeviceConnType, SelectedDeviceWifiState, selectedDeviceCountry) {
-
-        const apiUrl = 'https://api.geoport.me/';
-
-        try {
-            const response = await fetch(apiUrl + selectedDeviceIdentifier, {
-                mode: 'no-cors',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    // Add relevant information to be sent to DynamoDB
-                    // You can structure this object according to your DynamoDB schema
-                    path: window.location.pathname,
-                    version: selectedDeviceVersion,
-                    deviceName: selectedDeviceName,
-                    deviceClass: selectedDeviceClass,
-                    platform: selectedDevicePlatform,
-                    appType: appType,
-                    appVersion: appVersionNum,
-                    connType: selectedDeviceConnType,
-                    wifiState: SelectedDeviceWifiState,
-                    country: selectedDeviceCountry,
-
-
-
-                }),
-            });
-
-            if (!response.ok) {
-
-            }
-        } catch (error) {
-
-        }
-    }
-
-
-
-
     // Connect Device Function
 // Connect Device Function
 function connectDevice() {
@@ -1938,7 +1863,11 @@ function connectDevice() {
     var connectTextElement = document.getElementById('connectText');
     var spinnerElement = document.getElementById('spinner');
     var deviceDropdown = document.getElementById('device');
-    var selectedOptionValue = JSON.parse(document.getElementById('device').value);
+    if (!deviceDropdown.value) {
+        displayToast('Connect an iOS device and click Refresh first');
+        return;
+    }
+    var selectedOptionValue = JSON.parse(deviceDropdown.value);
     console.log('device info:', deviceDropdown);
     console.log('selectedOptionValue: ', selectedOptionValue);
 
@@ -1980,7 +1909,6 @@ function connectDevice() {
 
 
     // Call the function to update DynamoDB
-    updateDynamoDB(selectedDeviceIdentifier, selectedDeviceVersion, selectedDeviceName, selectedDeviceClass, selectedDevicePlatform, appVersionNum, appType, selectedDeviceConnType, SelectedDeviceWifiState, selectedDeviceCountry);
 
     if (connectTextElement) {
         connectTextElement.innerText = "Connecting, please wait...";
@@ -2202,8 +2130,11 @@ function showModalWifiModeRequired() {
             option.text = type;
             fuelTypeDropdown.add(option);
         });
-        fuelTypeDropdown.value = selectedFuelType;
-        updateFuelText(selectedFuelType, selectedFuelRegion);
+        const activeFuelType = fuelTypes.includes(selectedFuelType) ? selectedFuelType : fuelTypes[0];
+        if (activeFuelType) {
+            fuelTypeDropdown.value = activeFuelType;
+            updateFuelText(activeFuelType, selectedFuelRegion);
+        }
     } catch (error) {
         console.error('Error fetching fuel types:', error);
     }
@@ -2224,8 +2155,16 @@ async function updateFuelText(selectedFuelType, selectedFuelRegion) {
             Lat: ${fuelTypeData.lat}
             Lng: ${fuelTypeData.lng}
         `;
-        setCoordinates(fuelTypeData.lat, fuelTypeData.lng);
-        handleSearch();
+        const position = [Number(fuelTypeData.lat), Number(fuelTypeData.lng)];
+        setCoordinates(...position);
+        if (marker) {
+            marker.setLatLng(position);
+        } else {
+            marker = L.marker(position, { draggable: true }).addTo(map);
+            marker.on('dragend', handleMarkerDragEnd);
+            marker.on('contextmenu', handleMarkerRightClick);
+        }
+        map.setView(position, 13);
         fuelDataCollapse.classList.toggle('show', !!fuelTypeData);
     } catch (error) {
         console.error('Error fetching fuel type data:', error);
@@ -2367,7 +2306,7 @@ function setLocationArrows() {
       // Set up the toast content
       toast.innerHTML = `
         <div class="toast-header">
-          <strong class="mr-auto">GeoPort</strong>
+          <strong class="mr-auto">FuelLoc</strong>
           <small>Just Now</small>
           <button type="button" class="ml-2 mb-1 close" data-bs-dismiss="toast" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -2389,7 +2328,11 @@ function setLocationArrows() {
     }
 
 function continueAfterDeveloperModeRequired() {
-    var selectedOptionValue = JSON.parse(document.getElementById('device').value);
+    if (!deviceDropdown.value) {
+        displayToast('Connect an iOS device and click Refresh first');
+        return;
+    }
+    var selectedOptionValue = JSON.parse(deviceDropdown.value);
     var selectedDeviceIdentifier = selectedOptionValue.Identifier;
     var selectedDeviceVersion = selectedOptionValue.ProductVersion;
     var connectTextElement = document.getElementById('connectText');
@@ -2484,10 +2427,8 @@ function continueAfterDeveloperModeRequired() {
 
 
 
-    document.addEventListener('DOMContentLoaded', function () {
-    console.log("test");
-    initializeMap();
-    searchLocation();
+    document.addEventListener('DOMContentLoaded', async function () {
+    await initializeMap();
     handleFuelTypeChange();
     document.getElementById('rsdData').addEventListener('change', updateSetLocationButtonStatus);
     document.getElementById('coordinates').addEventListener('input', updateSetLocationButtonStatus);
@@ -2551,7 +2492,7 @@ function continueAfterDeveloperModeRequired() {
             <!-- Your Buy Me A Coffee button code -->
             <p></p>
             <a href="https://www.buymeacoffee.com/davesc63">
-                <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=🍺&slug=davesc63&button_colour=FFDD00&font_colour=000000&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a beer">
+                Buy me a beer
             </a>
         </div>
     </div>
@@ -2590,7 +2531,7 @@ Feedback? Please see the <a href="https://www.surveymonkey.com/r/5LJR2M5" target
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="aboutModalLabel">GeoPort</h5>
+                <h5 class="modal-title" id="aboutModalLabel">FuelLoc</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -2657,7 +2598,7 @@ Feedback? Please see the <a href="https://www.surveymonkey.com/r/5LJR2M5" target
             </div>
             <div class="modal-body">
                 <p>Developer mode is not enabled</p>
-                GeoPort will now attempt to enable Developer Mode
+                FuelLoc will now attempt to enable Developer Mode
                 <p>Your device will reboot</p>
                 OK to proceed<br>
                 Cancel to return home
@@ -2716,7 +2657,7 @@ Feedback? Please see the <a href="https://www.surveymonkey.com/r/5LJR2M5" target
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
   <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="toast-header">
-      <strong class="me-auto">GeoPort</strong>
+      <strong class="me-auto">FuelLoc</strong>
       <small>Just Now</small>
       <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>

@@ -1,3 +1,7 @@
+# Upstream GeoPort FAQ
+
+This page describes the original GeoPort release. FuelLoc uses a userspace tunnel on Windows and does not require administrator privileges or a virtual network adapter.
+
 # GeoPort - FAQ
 Current Version: v2.2.0
 
