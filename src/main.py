@@ -15,13 +15,6 @@ from pathlib import Path
 from urllib.request import urlopen
 
 from flask import Flask, abort, jsonify, render_template, request
-from pymobiledevice3.lockdown import create_using_usbmux
-from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
-from pymobiledevice3.services.amfi import AmfiService
-from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
-from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
-from pymobiledevice3.services.mobile_image_mounter import auto_mount
-from pymobiledevice3.usbmux import list_devices
 
 
 if getattr(sys, "frozen", False):
@@ -84,6 +77,9 @@ class DeviceSession:
             self.version = None
 
     async def connect(self, udid, version):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
+
         if self.udid == udid and self.rsd is not None:
             return self.rsd.service.address
         await self.close()
@@ -109,6 +105,9 @@ class DeviceSession:
         if self.rsd is None:
             raise RuntimeError("Connect an iOS device first")
         if self.simulation is None:
+            from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
+            from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
+
             dvt = DvtProvider(self.rsd)
             await dvt.connect()
             try:
@@ -122,6 +121,9 @@ class DeviceSession:
         await self.simulation.set(latitude, longitude)
 
     async def enable_developer_mode(self, udid):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.services.amfi import AmfiService
+
         lockdown = await create_using_usbmux(serial=udid, autopair=True)
         try:
             await AmfiService(lockdown).enable_developer_mode()
@@ -129,6 +131,9 @@ class DeviceSession:
             await lockdown.close()
 
     async def mount_image(self, udid):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.services.mobile_image_mounter import auto_mount
+
         lockdown = await create_using_usbmux(serial=udid, autopair=True)
         try:
             await auto_mount(lockdown)
@@ -196,6 +201,9 @@ def fuel_prices(fuel_type):
 
 
 async def device_list():
+    from pymobiledevice3.lockdown import create_using_usbmux
+    from pymobiledevice3.usbmux import list_devices
+
     result = {}
     for device in await list_devices():
         udid = device.serial
@@ -353,6 +361,8 @@ def prerequisite_checks():
             return False, "Install Apple Mobile Device Support (included with iTunes)"
 
     def device():
+        from pymobiledevice3.usbmux import list_devices
+
         devices = asyncio.run(list_devices())
         return (bool(devices), f"{len(devices)} iOS device(s) connected" if devices else "Connect and trust an iPhone via USB")
 

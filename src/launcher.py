@@ -129,6 +129,8 @@ def main():
 
     root.after(100, pump)
     root.after(180, animate)
+    # Paint the prepared window before device imports can compete for the GIL.
+    root.update_idletasks()
     threading.Thread(target=start_server, name="fuel-loc-startup", daemon=True).start()
     root.mainloop()
     if state["entered"]:

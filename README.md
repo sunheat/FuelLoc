@@ -17,3 +17,5 @@ The output is `dist/FuelLoc/`, including `FuelLoc.exe` and `LICENSE`. Keep the e
 The map and fuel-price feed need Internet access. Fuel-price requests go to `projectzerothree.info`; map tiles and search use third-party map services. FuelLoc does not send device identifiers to the original project's telemetry endpoint. External JavaScript is pinned with Subresource Integrity. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for the source review and its limits.
 
 The original author's attribution is retained here as required by the GPLv3 license. The donation area in the app is reserved for a future FuelLoc account and has no payment link.
+
+See [Windows startup measurements](docs/STARTUP_PERFORMANCE.md) for the comparison with the adjacent app, timing limits, and a repeatable startup benchmark.
