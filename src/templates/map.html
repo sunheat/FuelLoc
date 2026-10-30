@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/html">
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FuelLoc</title>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
@@ -24,358 +26,11 @@
     <link href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.css" integrity="sha384-HLz8tjUbckCtYXWfcHFsWHGswBsaXEEPHaHPiraWuQ3YunjkiGH0kUmE3K1bSkIz" crossorigin="anonymous" rel="stylesheet">
 
 
-    <style>
-.leaflet-menu {
-    display: none;
-    position: absolute;
-    box-shadow: 0 1px 7px rgba(0,0,0,.4);
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-    padding: 4px 0;
-    background-color: #fff;
-    cursor: default;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    z-index: 1001
-}
-
-.leaflet-menu a.leaflet-menu-item {
-    display: block;
-    color: #222;
-    font-size: 12px;
-    line-height: 20px;
-    text-decoration: none;
-    padding: 0 12px;
-    border-top: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-    cursor: default;
-    outline: 0
-}
-
-.leaflet-menu a.leaflet-menu-item.over {
-    background-color: #f4f4f4;
-    border-top: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0
-}
-
-.leaflet-menu-icon {
-    margin: 2px 8px 0 0;
-    width: 16px;
-    height: 16px;
-    float: left;
-    border: 0
-}
-
-        #map {
-            width: 100%;
-            height: 500px;
-            max-height: 70vh;
-        }
-
-        .coordinates-container {
-            margin-top: 10px;
-        }
-
-        /* Dark mode styles */
-        body.dark-mode {
-            background-color: #222; /* Darker background color for main page */
-            color: #fff;
-        }
-
-
-        body.dark-mode div[class="p-3 px-md-4 mb-3 bg-white border-bottom box-shadow"],
-        body.dark-mode select[class="custom-select"],
-        body.dark-mode select[class="custom-select d-block w-100"],
-        body.dark-mode input[type="option"],
-        body.dark-mode input[class="form-control"],
-        body.dark-mode #border,
-        body.dark-mode .collapse textarea,
-        body.dark-mode textarea {
-            background-color: #333; /* Dark background color for text inputs in dark mode */
-            color: #fff; /* Light text color for text inputs in dark mode */
-            border-color: #666; /* Dark border color for text inputs in dark mode */
-        }
-
-body.dark-mode #border.dark-mode-bg {
-        background-color: #222; /* Darker background color for main page in dark mode */
-        border-color: #666; /* Dark border color for the container in dark mode */
-    }
-
-    body.dark-mode #border.dark-mode-bg .box-shadow {
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Dark shadow for the container in dark mode */
-    }
-
-    /* Dark mode toast styles */
-body.dark-mode .toast {
-    background-color: #333; /* Dark background color for toast */
-    color: #fff; /* Light text color for toast in dark mode */
-}
-
-body.dark-mode .toast-header {
-    background-color: #555; /* Dark background color for toast header */
-    color: #fff; /* Light text color for toast header in dark mode */
-}
-
-body.dark-mode .toast-header .close {
-    color: #fff; /* Light close icon color for toast in dark mode */
-}
-
-body.dark-mode .toast-body {
-    background-color: #333; /* Dark background color for toast body */
-    color: #fff; /* Light text color for toast body in dark mode */
-}
-/* Dark mode modal styles */
-body.dark-mode .modal-content {
-    background-color: #333; /* Dark background color for modal content */
-    color: #fff; /* Light text color for modal content in dark mode */
-}
-
-body.dark-mode .modal-header {
-    background-color: #555; /* Dark background color for modal header */
-    color: #fff; /* Light text color for modal header in dark mode */
-    border-bottom: 1px solid #666; /* Dark border color for modal header in dark mode */
-}
-
-body.dark-mode .modal-body {
-    background-color: #333; /* Dark background color for modal body */
-    color: #fff; /* Light text color for modal body in dark mode */
-}
-
-body.dark-mode .modal-footer {
-    background-color: #333; /* Dark background color for modal footer */
-    color: #fff; /* Light text color for modal footer in dark mode */
-    border-top: 1px solid #666; /* Dark border color for modal footer in dark mode */
-}
-
-body.dark-mode .modal-header .close {
-    color: #fff; /* Light close icon color for modal in dark mode */
-}
-
-body.dark-mode .modal-footer button {
-    color: #fff; /* Light button text color for modal footer in dark mode */
-    background-color: #555; /* Dark button background color for modal footer in dark mode */
-    border-color: #555; /* Dark border color for buttons in modal footer in dark mode */
-}
-.marker-menu {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    padding: 10px;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.menu-item {
-    background-color: #f8f9fa;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.menu-item:hover {
-    background-color: #e9ecef;
-}
-/* Adjust the styling of the custom button to remove any outlines */
-.leaflet-control-filelayer .leaflet-control-filelayer-custom {
-    outline: none !important; /* Remove any outline */
-    border: none !important; /* Remove any border */
-    box-shadow: none !important; /* Remove any box-shadow */
-}
-
-/* Add margin to each button except for the last one */
-.leaflet-control-filelayer-custom {
-    margin-bottom: 1px; /* Adjust the margin as needed */
-}
-
-/* Remove margin from the last button */
-.leaflet-control-filelayer-custom:first-child {
-    margin-top: 1px;
-}
-
-/* Add a bottom border to each button except for the last one */
-.leaflet-control-filelayer-custom:not(:last-child) {
-    border-bottom: 1px solid gray;
-}
-.leaflet-control-filelayer .leaflet-control-send-gpx1 {
-    outline: none !important; /* Remove any outline */
-    border: none !important; /* Remove any border */
-    box-shadow: none !important; /* Remove any box-shadow */
-}*/
-.custom-popup-content {
-        width: 300px; /* Adjust the width as needed */
-    }
-.time-to-next-point-control-container {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-}
-/* Hide EasyButton containers */
-.leaflet-bar.easy-button-container.leaflet-control {
-    display: none;
-}
-/* Custom CSS to make layer control button smaller */
-.leaflet-control-layers-toggle {
-    width: 10px; /* Adjust width as needed */
-    height: 10px; /* Adjust height as needed */
-    font-size: 8px; /* Adjust font size as needed */
-    padding: 4px; /* Adjust padding as needed */
-}
-
-    </style>
+    <style>{% include 'desktop.css' %}</style>
 </head>
 
-<body>
-  {% if version_message %}
-        <div class="alert alert-warning" role="alert">
-            {{ version_message }}
-        </div>
-    {% endif %}
-
-  {% if github_broadcast %}
-    <div class="alert alert-info" role="alert">
-        {{ github_broadcast }}
-    </div>
-    {% endif %}
-
-{% if timeout_message %}
-        <div class="alert alert-warning" role="alert">
-            {{ timeout_message }}
-        </div>
-    {% endif %}
-    {% if error_message %}
-        <div class="alert alert-danger" role="alert">
-            {{ error_message }}
-        </div>
-    {% endif %}
-<p><br></p>
-
-<div class="d-flex flex-column align-items-center flex-md-row container">
-    <h4 class="my-0 mx-auto font-weight-normal">FuelLoc - Your location, anywhere!</h4>
-    <a id="about-btn" class="btn btn-outline-primary pl-4 pr-4" href="#" title="FuelLoc" style="display: none;">About</a>
-    <a id="exit-btn" class="btn btn-outline-primary pl-4 pr-4 ml-4" href="#" title="FuelLoc" onclick="exitApp()">Exit</a>
-</div>
-
-
-
-<!-- Dark Mode switch -->
-<div class="d-flex justify-content-md-end mt-3 container">
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" onchange="toggleDarkMode()">
-        <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
-
-    </div>
-</div>
-<div class="d-flex justify-content-md-end mt-3 container">
-    <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id="enableFuelPrices" onchange="toggleFuelTypeVisibility()">
-            <label for="enableFuelPrices"> Fuel Mode</label>
-    </div>
-</div>
-
-
-
-<div class="container">
-<!--    <div class="p-3 px-md-4 mb-3 bg-white border-bottom box-shadow dark-mode-bg"  id="border">-->
-    <div class="p-3 px-md-4 mb-3 border-bottom box-shadow dark-mode-bg"  id="border">
-
-</div>
-
-
-	<!-- Connect Device -->
-{% if error_messages %}
-    <button type="button" class="btn btn-primary pl-4 pr-4" id="connect" onclick="connectDevice()" disabled>
-        <span id="connectText">Connect Device</span>
-    </button>
-{% else %}
-    <br>
-      <form>
-    <div class="mb-3">
-        <label for="device">Select Device:</label><br>
-        <div class="row">
-            <div class="col">
-                <select class="custom-select d-block w-100" id="device" required>
-                </select>
-            </div>
-            <div class="col-md-auto">
-                <button type="button" class="btn btn-primary pl-4 pr-4" id="refresh" onclick="populateDeviceList()">Refresh</button>
-            </div>
-        </div>
-    </div>
-</form>
-
-
-
-    <!-- Keeping this code for the connection details drop down list, but hiding it. Not really required, but handy for debugging -->
-<div class="mb-3" style="display: none;">
-    <label for="connection">Connection:</label><br>
-    <div class="row">
-        <div class="col">
-            <select class="custom-select d-block w-100" id="connection" required>
-            </select>
-        </div>
-    </div>
-</div>
-
-<button type="button" class="btn btn-primary pl-4 pr-4" id="connect" onclick="connectDevice()">
-    <span id="connectText">Connect Device</span>
-    <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-</button>
-<p id="connectError" role="alert" style="color: #b42318;"></p>
-
-<button type="button" class="btn btn-danger pl-4 pr-4" id="disconnect" onclick="disconnectDevice()" style="display: none;">
-    Disconnect
-</button>
-
-
-    <!-- Add this input element with ID "rsdData" -->
-<input class="form-control" type="text" id="rsdData" placeholder="RSD Data…" readonly style="display: none;">  <!-- Initially hidden -->
-
-{% endif %}
-
-<p></p>
-    <form>
-<!-- Not implemented in standard version -->
-<!--<div class="mb-3">-->
-<!--        <input type="checkbox" role="switch" id="enableFuelPrices" onchange="toggleFuelTypeVisibility()" checked>-->
-<!--        <label for="enableFuelPrices"> Enable best fuel prices (Australia only)</label>-->
-<!--    </div>-->
-
-<!--     Fuel Region Dropdown -->
-    <div class="mb-3" id="fuelRegionSection" style="display: none;">
-    <label for="fuelRegion">Select Region:</label>
-    <select class="custom-select" id="fuelRegion" onchange="handleFuelTypeChange()">
-        <option value="All">All</option>
-        <option value="ACT">ACT</option>
-        <option value="NSW">NSW</option>
-        <option value="QLD">QLD</option>
-        <option value="VIC">VIC</option>
-        <option value="WA">WA</option>
-    </select>
-</div>
-        <!--     Fuel Type Dropdown -->
-    <div class="mb-3" id="fuelTypeSection" style="display: none;">
-        <label for="fuelType">Select fuel type:</label>
-        <select class="custom-select" id="fuelType" onchange="handleFuelTypeChange()">
-            <!-- Options will be populated dynamically -->
-        </select>
-        <p></p>
-        <div class="form-group">
-            <div class="collapse" id="fuelDataCollapse">
-                <label for="fuelText">Fuel Data</label>
-                <textarea class="form-control" id="fuelText" rows="8" readonly disabled></textarea>
-            </div>
-        </div>
-    </div>
-
-	<div id="dataList" class="mb-3"></div>
-        </form>
-	<div id="map"></div>
+<body class="dark-mode">
+{% include 'desktop.html' %}
 
 <script>
 //=========================== leaflet menu ====================
@@ -595,8 +250,17 @@ async function initializeMap(userLocale) {
 
     // Create the map instance after obtaining coordinates
     map = L.map('map', {
-        keyboard: false // Disable keyboard navigation
+        keyboard: false,
+        doubleClickZoom: false,
+        scrollWheelZoom: false
     });
+
+    // Require an intentional Ctrl + wheel gesture before Leaflet handles scrolling.
+    map.getContainer().addEventListener('wheel', event => {
+        if (event.ctrlKey) map.scrollWheelZoom.enable();
+        else map.scrollWheelZoom.disable();
+    }, { capture: true, passive: true });
+    new ResizeObserver(() => map.invalidateSize({ pan: false })).observe(map.getContainer());
 
     // Create tile layers
     var stadiaTileLayer = L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
@@ -693,7 +357,7 @@ async function initializeMap(userLocale) {
 
 
     // Add default tile layer
-    stadiaTileLayer.addTo(map);
+    openStreetMapTileLayer.addTo(map);
 
     // Define tile layer control options
     var baseLayers = {
@@ -1824,6 +1488,9 @@ function populateDeviceList() {
             });
 
             // Attach the devicesInfo object to the deviceDropdown for easy access later
+            if (!deviceDropdown.options.length) {
+                deviceDropdown.add(new Option('No device found — connect via USB', ''));
+            }
             deviceDropdown.devicesInfo = devicesInfo;
 
             // Add event listener to update value attribute of options
@@ -1853,6 +1520,8 @@ function populateDeviceList() {
         if (fuelTypeSection && fuelRegionSection && enableFuelPricesCheckbox) {
             fuelTypeSection.style.display = enableFuelPricesCheckbox.checked ? 'block' : 'none';
             fuelRegionSection.style.display = enableFuelPricesCheckbox.checked ? 'block' : 'none';
+            document.getElementById('fuelDataCollapse').classList.toggle('show', enableFuelPricesCheckbox.checked && !!document.getElementById('fuelText').value);
+            if (enableFuelPricesCheckbox.checked) handleFuelTypeChange();
         }
     }
 
@@ -2095,6 +1764,7 @@ function showModalWifiModeRequired() {
         // Hide rsdData text box
         var rsdDataElement = document.getElementById('rsdData');
         if (rsdDataElement) {
+            rsdDataElement.value = '';
             rsdDataElement.style.display = 'none';
         }
 
@@ -2117,12 +1787,16 @@ function showModalWifiModeRequired() {
     var fuelRegionDropdown = document.getElementById('fuelRegion');
     const selectedFuelRegion = fuelRegionDropdown.value;
     const selectedFuelType = fuelTypeDropdown.value;
+    const fuelStatus = document.getElementById('fuelStatus');
+    fuelStatus.textContent = 'Loading fuel prices…';
+    document.getElementById('fuelDataCollapse').classList.remove('show');
     console.log('Selected Fuel Region = ', selectedFuelRegion);
     fuelText.value = '';
     fuelTypeDropdown.innerHTML = '';
 
     try {
         const response = await fetch(`/api/fuel_types?region=${selectedFuelRegion}`);
+        if (!response.ok) throw new Error('Fuel prices unavailable');
         const fuelTypes = await response.json();
         fuelTypes.sort();
         fuelTypes.forEach(type => {
@@ -2135,8 +1809,11 @@ function showModalWifiModeRequired() {
         if (activeFuelType) {
             fuelTypeDropdown.value = activeFuelType;
             updateFuelText(activeFuelType, selectedFuelRegion);
+        } else {
+            fuelStatus.textContent = 'No prices available for this region.';
         }
     } catch (error) {
+        fuelStatus.textContent = 'Fuel prices unavailable. Toggle fuel mode or change region to retry.';
         console.error('Error fetching fuel types:', error);
     }
 }
@@ -2147,15 +1824,11 @@ async function updateFuelText(selectedFuelType, selectedFuelRegion) {
     var fuelDataCollapse = document.getElementById('fuelDataCollapse');
     try {
         const response = await fetch(`/api/data/${selectedFuelType}?region=${selectedFuelRegion}`);
+        if (!response.ok) throw new Error('Fuel price details unavailable');
         const fuelTypeData = await response.json();
-        fuelText.value = `
-            Type: ${fuelTypeData.type}
-            Price: ${fuelTypeData.price}
-            Suburb: ${fuelTypeData.suburb}
-            State: ${fuelTypeData.state}
-            Lat: ${fuelTypeData.lat}
-            Lng: ${fuelTypeData.lng}
-        `;
+        if (!document.getElementById('enableFuelPrices').checked) return;
+        document.getElementById('fuelStatus').textContent = '';
+        fuelText.value = `${fuelTypeData.type} · ${fuelTypeData.price} c/L\n${fuelTypeData.suburb}, ${fuelTypeData.state}\n${fuelTypeData.lat}, ${fuelTypeData.lng}`;
         const position = [Number(fuelTypeData.lat), Number(fuelTypeData.lng)];
         setCoordinates(...position);
         if (marker) {
@@ -2166,8 +1839,9 @@ async function updateFuelText(selectedFuelType, selectedFuelRegion) {
             marker.on('contextmenu', handleMarkerRightClick);
         }
         map.setView(position, 13);
-        fuelDataCollapse.classList.toggle('show', !!fuelTypeData);
+        fuelDataCollapse.classList.toggle('show', document.getElementById('enableFuelPrices').checked && !!fuelTypeData);
     } catch (error) {
+        document.getElementById('fuelStatus').textContent = 'Fuel price details unavailable. Change region or fuel type to retry.';
         console.error('Error fetching fuel type data:', error);
     }
 }
@@ -2461,53 +2135,6 @@ function continueAfterDeveloperModeRequired() {
 });
 </script>
 
-<p></p>
-
-<div class="mb-3">
-    <div class="row align-items-center">
-        <div class="col-md-auto">
-            <label class="mb-0" for="coordinates">Location:</label>
-        </div>
-        <div class="col">
-            <input type="text" class="form-control" id="coordinates">
-        </div>
-        <div class="col-md-auto">
-            <button type="button" class="btn btn-primary" id="search" onclick="handleSearch()">Search</button>
-        </div>
-    </div>
-</div>
-
-<div class="mb-3">
-    <div class="row align-items-center">
-        <div class="col">
-            <button type="button" class="btn btn-primary w-100" data-toggle="popover" id="set-location" disabled onclick="setLocation()">Simulate Location</button>
-        </div>
-        <div class="col">
-            <button type="button" class="btn btn-primary w-100" data-toggle="popover" id="stop-location" disabled onclick="stopLocation()">Stop Location</button>
-        </div>
-    </div>
-
-    <!-- Reserved donation area -->
-    <div class="row justify-content-center">
-        <div class="col-6 text-center"> <!-- Adjust the column size and add text-center class -->
-            <p></p>
-            <span aria-disabled="true">Buy me a beer (coming soon)</span>
-        </div>
-    </div>
-</div>
-
-
-
-    </div>
-</div>
-    <hr>
-Version: {{ app_version_num }}<br>
-
-
-
-
-
-
 <div class="modal fade" id="shutdownModal" tabindex="-1" role="dialog" aria-labelledby="shutdownModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -2664,11 +2291,9 @@ Version: {{ app_version_num }}<br>
   </div>
 </div>
 <!-- Toast Container -->
-  <div aria-live="polite" aria-atomic="true" style="position: relative; min-height: 200px;">
+  <div aria-live="polite" aria-atomic="true" class="notification-region">
     <div class="toast-container position-absolute top-0 end-0 p-3" style="z-index: 9999;"></div>
   </div>
-
-</div>
 
 </body>
 

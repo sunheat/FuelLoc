@@ -18,4 +18,6 @@ The map and fuel-price feed need Internet access. Fuel-price requests go to `pro
 
 The original author's attribution is retained here as required by the GPLv3 license. The donation area in the app is reserved for a future FuelLoc account and has no payment link.
 
+The desktop workspace puts device and fuel controls beside the map, with location actions always at the bottom of the sidebar. Fuel mode starts enabled. The default window is up to 1200 × 780 logical pixels, capped to the Windows work area; resizing and maximizing remain available. Hold Ctrl while scrolling to zoom the map, or use its +/− buttons. See [desktop layout and validation](docs/DESKTOP_UI.md).
+
 See [Windows startup measurements](docs/STARTUP_PERFORMANCE.md) for the comparison with the adjacent app, timing limits, and a repeatable startup benchmark.

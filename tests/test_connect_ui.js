@@ -7,7 +7,7 @@ const html = fs.readFileSync(path.join(__dirname, '../src/templates/map.html'), 
 const start = html.indexOf('function connectDevice() {');
 const end = html.indexOf('// Function to show the modal for developer mode required', start);
 assert(start >= 0 && end > start);
-assert(html.includes('id="connectError"'), 'The connection error needs a visible status element');
+assert(fs.readFileSync(path.join(__dirname, '../src/templates/desktop.html'), 'utf8').includes('id="connectError"'), 'The connection error needs a visible status element');
 
 async function checkFailure(fetch, expectedError) {
     const elements = {

@@ -1,0 +1,57 @@
+<div class="desktop-app">
+    <header class="app-header">
+        <div class="brand"><span class="brand-icon" aria-hidden="true">⌖</span><div><h1>FuelLoc</h1><span class="subtitle">Your location, anywhere.</span></div></div>
+        <div class="header-actions">
+            <span class="local-badge"><span aria-hidden="true">●</span> Local workspace</span>
+            <label class="theme-switch" for="darkModeSwitch"><input type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()" checked> Dark mode</label>
+            <button type="button" class="btn btn-outline-secondary" id="exit-btn" onclick="exitApp()">Exit</button>
+        </div>
+    </header>
+    <main class="workspace">
+        <aside class="sidebar" aria-label="Location controls">
+            <div class="sidebar-content">
+                {% for message in [version_message, github_broadcast, timeout_message, error_message] %}
+                {% if message %}<div class="alert alert-warning" role="alert">{{ message }}</div>{% endif %}
+                {% endfor %}
+                <section class="control-section" aria-labelledby="deviceHeading">
+                    <div class="section-heading"><span class="step">01</span><h2 id="deviceHeading">Connect your device</h2></div>
+                    <label for="device">iPhone or iPad</label>
+                    <div class="input-row"><select id="device" class="form-select" required><option value="">Scanning for devices…</option></select><button type="button" class="btn btn-outline-secondary" id="refresh" onclick="populateDeviceList()" title="Scan for connected devices">Refresh</button></div>
+                    <div class="connection-actions">
+                        <button type="button" class="btn btn-primary" id="connect" onclick="connectDevice()"><span id="connectText">Connect Device</span> <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-label="Connecting" style="display:none"></span></button>
+                        <button type="button" class="btn btn-outline-danger" id="disconnect" onclick="disconnectDevice()" style="display:none">Disconnect</button>
+                    </div>
+                    <p id="connectError" role="alert"></p>
+                    <p class="help-text">Connect via USB, unlock your device and trust this computer.</p>
+                    <select id="connection" hidden aria-label="Connection details"></select>
+                    <input id="rsdData" type="hidden" readonly>
+                </section>
+                <section class="control-section fuel-section" aria-labelledby="fuelHeading">
+                    <div class="section-heading"><span class="step">02</span><h2 id="fuelHeading">Find cheaper fuel</h2><label class="fuel-toggle" for="enableFuelPrices"><input type="checkbox" id="enableFuelPrices" onchange="toggleFuelTypeVisibility()" checked> Enable</label></div>
+                    <p class="help-text fuel-intro">Compare the best reported prices across Australia.</p>
+                    <div class="fuel-filters">
+                        <div id="fuelRegionSection"><label for="fuelRegion">Region</label><select class="form-select" id="fuelRegion" onchange="handleFuelTypeChange()"><option value="All">All Australia</option><option value="ACT">ACT</option><option value="NSW">NSW</option><option value="QLD">QLD</option><option value="VIC">VIC</option><option value="WA">WA</option></select></div>
+                        <div id="fuelTypeSection"><label for="fuelType">Fuel type</label><select class="form-select" id="fuelType" onchange="handleFuelTypeChange()"></select></div>
+                    </div>
+                    <p id="fuelStatus" class="help-text" role="status"></p>
+                    <div class="collapse" id="fuelDataCollapse"><label for="fuelText" class="visually-hidden">Fuel price details</label><textarea class="form-control" id="fuelText" rows="4" readonly aria-label="Fuel price details"></textarea></div>
+                    <div id="dataList"></div>
+                </section>
+            </div>
+            <div class="location-actions">
+                <div class="section-heading"><span class="status-dot" aria-hidden="true"></span><h2>Location control</h2></div>
+                <button type="button" class="btn btn-primary" id="set-location" disabled onclick="setLocation()">Simulate Location</button>
+                <button type="button" class="btn btn-outline-secondary" id="stop-location" disabled onclick="stopLocation()">Stop Location</button>
+                <p class="help-text">Stop to restore your device’s real location.</p>
+            </div>
+        </aside>
+        <section class="map-panel" aria-labelledby="mapHeading">
+            <div class="map-toolbar"><div><h2 id="mapHeading">Location preview</h2><span class="help-text">Select one point on the map</span></div><button type="button" class="btn btn-outline-secondary" id="mapTools" aria-pressed="false" onclick="this.setAttribute('aria-pressed', document.getElementById('map').classList.toggle('show-tools'))">More map tools</button>
+                <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button></div>
+            </div>
+            <div id="map" aria-label="Location map"></div>
+            <div class="map-hint"><span>Double-click to place a pin · Drag to move</span><span>Ctrl + scroll to zoom</span></div>
+        </section>
+    </main>
+    <footer class="app-footer"><span>FuelLoc <span class="version">{{ app_version_num }}</span></span><span>Buy me a beer (coming soon)</span></footer>
+</div>

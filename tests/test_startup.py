@@ -4,9 +4,29 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+from unittest.mock import Mock, patch
+import runpy
 
 
 class StartupTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "win32", "Windows work-area API")
+    def test_window_size_respects_scaled_work_area_and_restores_dpi_context(self):
+        namespace = runpy.run_path(str(Path(__file__).parents[1] / "src/main.py"), run_name="window_size_test")
+        import ctypes
+
+        for work_width, work_height, expected in [(1920, 1040, (1200, 780)), (1536, 832, (1200, 780)), (1280, 693, (1200, 661))]:
+            with self.subTest(work_area=(work_width, work_height)):
+                def query_area(action, unused, pointer, flags):
+                    self.assertEqual(action, 48)
+                    pointer._obj.right = work_width
+                    pointer._obj.bottom = work_height
+                    return True
+
+                awareness = Mock(return_value=1234)
+                with patch.object(ctypes.windll.user32, "SetThreadDpiAwarenessContext", awareness), patch.object(ctypes.windll.user32, "SystemParametersInfoW", query_area):
+                    self.assertEqual(namespace["app_window_size"](), expected)
+                    self.assertEqual([call.args for call in awareness.call_args_list], [(-1,), (1234,)])
+
     def test_local_interface_starts_before_device_imports(self):
         probe = '''
 import importlib.abc
