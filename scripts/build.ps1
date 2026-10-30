@@ -1,5 +1,10 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
+$distributionExe = Join-Path (Get-Location).Path 'dist\FuelLoc\FuelLoc.exe'
+$runningApps = Get-CimInstance Win32_Process -Filter "Name = 'FuelLoc.exe'" | Where-Object ExecutablePath -EQ $distributionExe
+if ($runningApps) {
+    throw "Choose Exit in the running FuelLoc app before rebuilding (processes: $($runningApps.ProcessId -join ', ')). The existing distribution has not been changed."
+}
 if (-not (Test-Path .venv\Scripts\python.exe)) {
     python -m venv .venv
 }

@@ -373,6 +373,27 @@ def prerequisite_checks():
     ]
 
 
+def app_window_size():
+    """Fit the default window within the Windows work area in logical pixels."""
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        awareness = user32.SetThreadDpiAwarenessContext
+        awareness.argtypes = [ctypes.c_void_p]
+        awareness.restype = ctypes.c_void_p
+        previous = awareness(-1)  # Query the work area in the same logical units as Chromium.
+        try:
+            area = wintypes.RECT()
+            if user32.SystemParametersInfoW(48, 0, ctypes.byref(area), 0):
+                return min(1200, area.right - area.left - 32), min(780, area.bottom - area.top - 32)
+        finally:
+            if previous:
+                awareness(previous)
+    return 1200, 780
+
+
 def open_app_window(url):
     browser = find_app_browser()
     if browser is None:
@@ -380,8 +401,9 @@ def open_app_window(url):
         return
     profile = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "FuelLoc" / "BrowserProfile"
     profile.mkdir(parents=True, exist_ok=True)
+    width, height = app_window_size()
     subprocess.Popen(
-        [str(browser), f"--app={url}", "--window-size=1440,900", f"--user-data-dir={profile}"],
+        [str(browser), f"--app={url}", f"--window-size={width},{height}", f"--user-data-dir={profile}"],
         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
