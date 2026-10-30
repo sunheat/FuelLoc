@@ -326,6 +326,7 @@ body.dark-mode .modal-footer button {
     <span id="connectText">Connect Device</span>
     <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
 </button>
+<p id="connectError" role="alert" style="color: #b42318;"></p>
 
 <button type="button" class="btn btn-danger pl-4 pr-4" id="disconnect" onclick="disconnectDevice()" style="display: none;">
     Disconnect
@@ -1862,6 +1863,8 @@ function connectDevice() {
     var connectButton = document.getElementById('connect');
     var connectTextElement = document.getElementById('connectText');
     var spinnerElement = document.getElementById('spinner');
+    var connectErrorElement = document.getElementById('connectError');
+    connectErrorElement.textContent = '';
     var deviceDropdown = document.getElementById('device');
     if (!deviceDropdown.value) {
         displayToast('Connect an iOS device and click Refresh first');
@@ -1922,6 +1925,7 @@ function connectDevice() {
     // Make AJAX request to notify the server about the command
     fetch('/connect_device', {
         method: 'POST',
+        signal: AbortSignal.timeout(95000),
         headers: {
             'Content-Type': 'application/json',
         },
@@ -1943,20 +1947,20 @@ function connectDevice() {
         if ('developer_mode_required' in data) {
             // Display modal informing the user and providing options
             showModalDeveloperModeRequired();
+            connectTextElement.innerText = "Connect Device";
             return;
         }
          // Check if there is an error with the message 'No Pair Record Found'
         if ('Error' in data && data.Error === 'No Pair Record Found') {
             // Display modal informing the user about the pair record
             showPairRecordModal();
+            connectTextElement.innerText = "Connect Device";
             return;
     }
 
         // Check for the 'error' key in the response
         if ('error' in data) {
-            // Display the error message as a popup or text on the page
-            //alert(data.error); // You can use a better UI method here
-            showModalTimeout();
+            connectErrorElement.textContent = data.error || 'Could not connect to the device';
 
             // Reset connectTextElement
             if (connectTextElement) {
@@ -2032,19 +2036,16 @@ function connectDevice() {
         })
         .catch(error => {
             console.error('Error connecting device:', error);
-            var displayTextElement = document.getElementById('displayText');
-            if (displayTextElement) {
-                displayTextElement.innerText = 'Error connecting device.';
-            }
-
-            if (connectTextElement) {
-                connectTextElement.innerText = "Error connecting";
-            }
+            connectErrorElement.textContent = error.name === 'TimeoutError'
+                ? 'Connection timed out. Check that the iPhone is unlocked and trusted, then try again.'
+                : `Could not connect: ${error.message}`;
+            connectTextElement.innerText = "Connect Device";
 
             if (connectButton) {
                 connectButton.disabled = false;  // Enable the button
             }
-        });
+        })
+        .finally(() => { spinnerElement.style.display = 'none'; });
 }
 
 
@@ -2486,14 +2487,11 @@ function continueAfterDeveloperModeRequired() {
         </div>
     </div>
 
-    <!-- Centered Buy Me A Coffee button -->
+    <!-- Reserved donation area -->
     <div class="row justify-content-center">
         <div class="col-6 text-center"> <!-- Adjust the column size and add text-center class -->
-            <!-- Your Buy Me A Coffee button code -->
             <p></p>
-            <a href="https://www.buymeacoffee.com/davesc63">
-                Buy me a beer
-            </a>
+            <span aria-disabled="true">Buy me a beer (coming soon)</span>
         </div>
     </div>
 </div>
@@ -2504,8 +2502,7 @@ function continueAfterDeveloperModeRequired() {
 </div>
     <hr>
 Version: {{ app_version_num }}<br>
-Need help? Please see the <a href="https://github.com/davesc63/GeoPort/blob/main/FAQ.md" target="_blank">FAQ</a><br>
-Feedback? Please see the <a href="https://www.surveymonkey.com/r/5LJR2M5" target="_blank">Survey</a>
+
 
 
 

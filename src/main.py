@@ -6,21 +6,22 @@ import json
 import logging
 import math
 import os
+import shutil
 import socket
+import subprocess
 import sys
 import threading
-import webbrowser
+from pathlib import Path
 from urllib.request import urlopen
 
 from flask import Flask, abort, jsonify, render_template, request
-from pymobiledevice3.lockdown import create_using_usbmux
-from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
-from pymobiledevice3.services.amfi import AmfiService
-from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
-from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
-from pymobiledevice3.services.mobile_image_mounter import auto_mount
-from pymobiledevice3.usbmux import list_devices
 
+
+if getattr(sys, "frozen", False):
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, "w")
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, "w")
 
 logger = logging.getLogger("FuelLoc")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -76,6 +77,9 @@ class DeviceSession:
             self.version = None
 
     async def connect(self, udid, version):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
+
         if self.udid == udid and self.rsd is not None:
             return self.rsd.service.address
         await self.close()
@@ -101,6 +105,9 @@ class DeviceSession:
         if self.rsd is None:
             raise RuntimeError("Connect an iOS device first")
         if self.simulation is None:
+            from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
+            from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
+
             dvt = DvtProvider(self.rsd)
             await dvt.connect()
             try:
@@ -114,6 +121,9 @@ class DeviceSession:
         await self.simulation.set(latitude, longitude)
 
     async def enable_developer_mode(self, udid):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.services.amfi import AmfiService
+
         lockdown = await create_using_usbmux(serial=udid, autopair=True)
         try:
             await AmfiService(lockdown).enable_developer_mode()
@@ -121,6 +131,9 @@ class DeviceSession:
             await lockdown.close()
 
     async def mount_image(self, udid):
+        from pymobiledevice3.lockdown import create_using_usbmux
+        from pymobiledevice3.services.mobile_image_mounter import auto_mount
+
         lockdown = await create_using_usbmux(serial=udid, autopair=True)
         try:
             await auto_mount(lockdown)
@@ -188,6 +201,9 @@ def fuel_prices(fuel_type):
 
 
 async def device_list():
+    from pymobiledevice3.lockdown import create_using_usbmux
+    from pymobiledevice3.usbmux import list_devices
+
     result = {}
     for device in await list_devices():
         udid = device.serial
@@ -320,6 +336,57 @@ def select_port(requested):
             return probe.getsockname()[1]
 
 
+def find_app_browser():
+    """Find an installed browser that supports a standalone app window."""
+    folders = [os.environ.get("PROGRAMFILES"), os.environ.get("PROGRAMFILES(X86)"), os.environ.get("LOCALAPPDATA")]
+    for folder in filter(None, folders):
+        for name in ("Microsoft/Edge/Application/msedge.exe", "Google/Chrome/Application/chrome.exe"):
+            candidate = Path(folder) / name
+            if candidate.is_file():
+                return candidate
+    for name in ("msedge", "chrome"):
+        candidate = shutil.which(name)
+        if candidate:
+            return Path(candidate)
+    return None
+
+
+def prerequisite_checks():
+    """Check only components used by FuelLoc's Windows path."""
+    def apple_service():
+        try:
+            with socket.create_connection(("127.0.0.1", 27015), timeout=2):
+                return True, "Apple device service is reachable"
+        except OSError:
+            return False, "Install Apple Mobile Device Support (included with iTunes)"
+
+    def device():
+        from pymobiledevice3.usbmux import list_devices
+
+        devices = asyncio.run(list_devices())
+        return (bool(devices), f"{len(devices)} iOS device(s) connected" if devices else "Connect and trust an iPhone via USB")
+
+    return [
+        ("App window browser", lambda: (find_app_browser() is not None, "Microsoft Edge or Google Chrome")),
+        ("Apple Mobile Device Support", apple_service),
+        ("iPhone connection", device),
+    ]
+
+
+def open_app_window(url):
+    browser = find_app_browser()
+    if browser is None:
+        logger.error("Microsoft Edge or Google Chrome is needed to open the app window")
+        return
+    profile = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "FuelLoc" / "BrowserProfile"
+    profile.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        [str(browser), f"--app={url}", "--window-size=1440,900", f"--user-data-dir={profile}"],
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+
+
 def main():
     global chosen_port
     parser = argparse.ArgumentParser()
@@ -330,7 +397,7 @@ def main():
     url = f"http://127.0.0.1:{chosen_port}"
     logger.info("Opening %s", url)
     if not args.no_browser:
-        threading.Timer(1, lambda: webbrowser.open(url)).start()
+        threading.Timer(1, lambda: open_app_window(url)).start()
     app.run(debug=False, use_reloader=False, host="127.0.0.1", port=chosen_port)
 
 

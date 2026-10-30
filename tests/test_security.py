@@ -48,7 +48,7 @@ class SecurityTests(unittest.TestCase):
         async def fake_lockdown(**kwargs):
             return FakeLockdown()
         session = namespace["DeviceSession"]()
-        with patch.dict(session.connect.__globals__, {"create_using_usbmux": fake_lockdown, "UserspaceRsdTunnel": FakeTunnel}):
+        with patch("pymobiledevice3.lockdown.create_using_usbmux", fake_lockdown), patch("pymobiledevice3.remote.userspace_tunnel.UserspaceRsdTunnel", FakeTunnel):
             self.assertEqual(session.runner.run(session.connect("TEST-UDID", "18.0")), ("fd00::1", 1234))
             self.assertIs(session.rsd, fake_rsd)
             session.runner.run(session.close())
