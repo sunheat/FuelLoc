@@ -4,9 +4,12 @@ from io import BytesIO
 import json
 from pathlib import Path
 import runpy
+import sys
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 
 class FuelCacheTests(unittest.TestCase):
@@ -37,6 +40,6 @@ class FuelCacheTests(unittest.TestCase):
     def test_expired_data_is_not_returned_if_refresh_fails(self):
         self.get_data()
         self.now += 301
-        with patch.dict(self.get_data.__globals__, {'urlopen': lambda *args, **kwargs: (_ for _ in ()).throw(OSError('Offline'))}):
+        with patch.dict(self.get_data.__globals__, {'urlopen': Mock(side_effect=OSError('Offline'))}):
             self.assertIsNone(self.get_data())
         self.assertEqual(self.get_data()['download'], 2)
