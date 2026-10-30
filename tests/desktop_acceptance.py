@@ -86,6 +86,10 @@ def main():
             page.mouse.wheel(0, -300)
             page.wait_for_timeout(300)
             assert page.evaluate('map.getZoom()') == zoom, 'Ordinary scrolling zoomed the map'
+            assert page.locator('#mapWheelHint').is_visible(), 'Scrolling needs an on-map Ctrl hint'
+            page.keyboard.down('Control')
+            assert not page.locator('#mapWheelHint').is_visible(), 'Ctrl should immediately dismiss the hint'
+            page.keyboard.up('Control')
             page.keyboard.down('Control')
             page.mouse.wheel(0, -300)
             page.keyboard.up('Control')
@@ -96,6 +100,14 @@ def main():
             page.wait_for_timeout(300)
             assert page.evaluate('map.getZoom()') == zoom, 'Ordinary scrolling after Ctrl zoom changed the map'
             print('PASS: wheel gestures only zoom with Ctrl')
+
+            assert page.evaluate("""() => !document.querySelector('.app-header').dispatchEvent(
+                new WheelEvent('wheel', {ctrlKey: true, deltaY: -100, bubbles: true, cancelable: true}))"""), 'Page zoom gesture was not cancelled outside the map'
+            assert page.evaluate("""() => !document.dispatchEvent(new KeyboardEvent('keydown', {
+                key: '+', ctrlKey: true, bubbles: true, cancelable: true}))"""), 'Keyboard page zoom was not cancelled'
+            assert page.locator('.app-header').evaluate("e => !e.dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true}))")
+            assert page.locator('#coordinates').evaluate("e => e.dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true}))"), 'Text editing menu must remain available'
+            print('PASS: page zoom suppressed and text context menu preserved')
 
             page.locator('#map').dblclick(position={"x": 300, "y": 200})
             page.wait_for_timeout(200)
