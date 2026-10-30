@@ -60,13 +60,15 @@ def main():
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(channel="msedge", headless=True)
             page = browser.new_page(viewport={"width": 1200, "height": 720})
-            page.route(url + "/**", lambda route: route.continue_() if route.request.url == url + "/" else api(route))
+            page.route(url + "/**", lambda route: route.continue_() if route.request.url == url + "/" or route.request.url.startswith(url + '/static/') else api(route))
             page.route("https://nominatim.openstreetmap.org/**", lambda route: route.fulfill(
                 content_type="application/json", body=json.dumps([{"lat": "-33.86", "lon": "151.21", "display_name": "Sydney", "boundingbox": ["-34", "-33", "151", "152"]}])))
             errors = []
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(url, wait_until="networkidle")
             page.wait_for_function("typeof map !== 'undefined' && map && map._loaded")
+            assert page.locator('.brand-icon').evaluate('e => e.complete && e.naturalWidth === 256')
+            assert page.request.get(url + '/static/fuelloc.ico').status == 200
             controls = ["#device", "#refresh", "#connect", "#coordinates", "#search", "#set-location", "#stop-location", "#map"]
             page.screenshot(path=str(ROOT / "build/desktop-dark.png"))
             assert_fits(page, controls)
