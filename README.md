@@ -4,6 +4,8 @@ FuelLoc is a portable Windows app for iOS location testing and browsing Australi
 
 ## Run the portable app
 
+Start `dist/FuelLoc/FuelLoc.exe` and keep its `_internal` folder beside it. The EXE under `build/FuelLoc/` is an intermediate build artifact and cannot run on its own. Before rebuilding, choose **Exit** in FuelLoc; the build script refuses to overwrite a running distribution.
+
 Download or build the `FuelLoc` folder, then double-click `FuelLoc.exe` inside it. The prerequisite window appears while the local app starts. **Enter app** becomes available as soon as the local app is ready, even if other checks fail. FuelLoc then opens its local interface in a standalone app window without a command prompt. No installation or administrator elevation is requested by FuelLoc.
 
 To build it yourself, install Python 3.12 and run:
