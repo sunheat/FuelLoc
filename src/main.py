@@ -16,6 +16,8 @@ from urllib.request import urlopen
 
 from flask import Flask, abort, jsonify, render_template, request
 
+import user_state
+
 
 if getattr(sys, "frozen", False):
     if sys.stdout is None:
@@ -190,6 +192,47 @@ def fuel_types():
     return jsonify(sorted({item["type"] for item in prices if "type" in item}))
 
 
+@app.get("/api/user_state")
+def get_user_state():
+    return jsonify(user_state.read_state())
+
+
+@app.put("/api/preferences")
+def update_preferences():
+    values = request.get_json(silent=True)
+    if not isinstance(values, dict) or not values or values.keys() - user_state.DEFAULTS.keys():
+        return jsonify({"error": "Invalid preferences"}), 400
+    for key, value in values.items():
+        if key in {"dark_mode", "fuel_enabled"} and not isinstance(value, bool):
+            return jsonify({"error": "Invalid preference value"}), 400
+        if key == "fuel_region" and (not isinstance(value, str) or value not in {"All", "ACT", "NSW", "QLD", "VIC", "WA"}):
+            return jsonify({"error": "Invalid region"}), 400
+        if key == "fuel_type" and (not isinstance(value, str) or len(value) > 40):
+            return jsonify({"error": "Invalid fuel type"}), 400
+    user_state.save_preferences(values)
+    return jsonify({"success": True})
+
+
+@app.post("/api/locations")
+def save_user_location():
+    data = request.get_json(silent=True)
+    try:
+        latitude, longitude = coordinates(data)
+        name = data.get("name", "")
+        if not isinstance(name, str) or len(name.strip()) > 80:
+            raise ValueError("Invalid location name")
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Invalid location"}), 400
+    user_state.save_location(latitude, longitude, name.strip())
+    return jsonify(user_state.read_state()["locations"])
+
+
+@app.delete("/api/locations/<int:location_id>")
+def delete_user_location(location_id):
+    user_state.delete_location(location_id)
+    return jsonify(user_state.read_state()["locations"])
+
+
 @app.get("/api/data/<fuel_type>")
 def fuel_prices(fuel_type):
     data = get_fuel_data()
@@ -253,21 +296,31 @@ def update_location():
     global location
     data = request.get_json(silent=True) or {}
     try:
-        latitude, longitude = float(data["lat"]), float(data["lng"])
-        if not math.isfinite(latitude) or not math.isfinite(longitude) or not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-            raise ValueError("Coordinates outside valid range")
+        latitude, longitude = coordinates(data)
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "Invalid coordinates"}), 400
     location = latitude, longitude
     return "Location updated successfully"
 
 
+def coordinates(data):
+    latitude, longitude = float(data["lat"]), float(data["lng"])
+    if not math.isfinite(latitude) or not math.isfinite(longitude) or not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+        raise ValueError("Coordinates outside valid range")
+    return latitude, longitude
+
+
 @app.post("/set_location")
 def set_location():
-    if location is None:
+    selected_location = location
+    if selected_location is None:
         return jsonify({"error": "Select a location first"}), 400
     try:
-        session.runner.run(session.set_location(*location))
+        session.runner.run(session.set_location(*selected_location))
+        try:
+            user_state.save_location(*selected_location)
+        except (OSError, user_state.sqlite3.Error):
+            logger.exception("Location was set, but its history could not be saved")
         return "Location set successfully"
     except Exception as error:
         logger.warning("Setting location failed: %s", error)
