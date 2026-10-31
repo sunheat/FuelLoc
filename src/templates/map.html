@@ -256,10 +256,35 @@ async function initializeMap(userLocale) {
     });
 
     // Require an intentional Ctrl + wheel gesture before Leaflet handles scrolling.
+    const wheelHint = document.getElementById('mapWheelHint');
+    let wheelHintTimer;
+    function hideWheelHint() {
+        clearTimeout(wheelHintTimer);
+        wheelHint.hidden = true;
+    }
     map.getContainer().addEventListener('wheel', event => {
-        if (event.ctrlKey) map.scrollWheelZoom.enable();
-        else map.scrollWheelZoom.disable();
+        if (event.ctrlKey) {
+            hideWheelHint();
+            map.scrollWheelZoom.enable();
+        } else {
+            map.scrollWheelZoom.disable();
+            wheelHint.hidden = false;
+            clearTimeout(wheelHintTimer);
+            wheelHintTimer = setTimeout(hideWheelHint, 1500);
+        }
     }, { capture: true, passive: true });
+    map.getContainer().addEventListener('mouseleave', hideWheelHint);
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Control') hideWheelHint();
+        if ((event.ctrlKey || event.metaKey) && ['+', '=', '-', '0'].includes(event.key)) event.preventDefault();
+    }, { capture: true });
+    // Cancel Chromium's page zoom without stopping Leaflet's map handler or OS DPI scaling.
+    document.addEventListener('wheel', event => {
+        if (event.ctrlKey) event.preventDefault();
+    }, { capture: true, passive: false });
+    document.addEventListener('contextmenu', event => {
+        if (!event.target.closest('input, textarea, [contenteditable="true"]')) event.preventDefault();
+    });
     new ResizeObserver(() => map.invalidateSize({ pan: false })).observe(map.getContainer());
 
     // Create tile layers

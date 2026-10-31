@@ -47,9 +47,9 @@
         </aside>
         <section class="map-panel" aria-labelledby="mapHeading">
             <div class="map-toolbar"><div><h2 id="mapHeading">Location preview</h2><span class="help-text">Select one point on the map</span></div><button type="button" class="btn btn-outline-secondary" id="mapTools" aria-pressed="false" onclick="this.setAttribute('aria-pressed', document.getElementById('map').classList.toggle('show-tools'))">More map tools</button>
-                <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button></div>
+                <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Address or latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button></div>
             </div>
-            <div id="map" aria-label="Location map"></div>
+            <div class="map-canvas"><div id="map" aria-label="Location map"></div><div id="mapWheelHint" role="status" hidden>Hold Ctrl and scroll to zoom the map</div></div>
             <div class="map-hint"><span>Double-click to place a pin · Drag to move</span><span>Ctrl + scroll to zoom</span></div>
         </section>
     </main>
