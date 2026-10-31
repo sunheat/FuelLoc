@@ -1715,6 +1715,7 @@ function connectDevice() {
                             //rsdDataElement.style.display = 'block';  // Make rsdData visible
                             updateSetLocationButtonStatus();
                             updateStopLocationButtonStatus();  // Add this line to update the Stop Location button status
+                            showWorkspaceNotification('Device connected');
 
                             // Show the disconnect button when rsdData is visible
                             var disconnectButton = document.getElementById('disconnect');

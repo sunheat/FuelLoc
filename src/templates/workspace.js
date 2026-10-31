@@ -35,8 +35,8 @@ function showLocationResult(restoring, error = null) {
         : restoring ? 'Location restored' : 'Location set';
     document.getElementById('locationResultMessage').textContent = error
         ? error.message
-        : '';
-    document.getElementById('locationResultMessage').hidden = !error;
+        : restoring ? '' : 'Enjoy! Use Stop Location to restore your real location.';
+    document.getElementById('locationResultMessage').hidden = !error && restoring;
     document.getElementById('locationResultSupport').hidden = Boolean(error) || restoring;
     const details = document.getElementById('locationResultDetails');
     details.hidden = !error;

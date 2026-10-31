@@ -53,7 +53,8 @@ async function main() {
     response = {ok: true, status: 200, text: async () => 'Location set successfully'};
     await context.setLocation();
     assert.equal(elements.locationResultSupport.hidden, false);
-    assert.equal(elements.locationResultMessage.hidden, true, 'Success needs a single concise message');
+    assert.equal(elements.locationResultMessage.hidden, false);
+    assert.equal(elements.locationResultMessage.textContent, 'Enjoy! Use Stop Location to restore your real location.');
     assert.equal(animation.options.duration, 6000);
     assert.equal(animation.frames[1].strokeDashoffset, -100, 'The ring must recede clockwise');
     for (const id of ['locationResultSupport', 'locationResultOK']) {
@@ -72,6 +73,7 @@ async function main() {
     await context.stopLocation();
     assert.equal(elements.locationResultSupport.hidden, true);
     assert.equal(animation.options.duration, 3000);
+    assert.equal(elements.locationResultMessage.hidden, true, 'Restoration keeps its concise presentation');
     elements.locationResultDialog.close();
     assert.equal(animation.playState, 'idle', 'Manual dismissal must cancel the old timer');
 

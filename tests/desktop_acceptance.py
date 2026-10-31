@@ -135,6 +135,9 @@ def main():
             page.wait_for_function("document.getElementById('device').textContent.includes('Test iPhone')")
             page.locator('#connect').click()
             page.wait_for_function("document.getElementById('connectText').textContent === 'Connected'")
+            page.locator('#workspaceNotification').wait_for(state='visible')
+            assert page.locator('#workspaceNotification').inner_text() == 'Device connected'
+            assert not page.locator('#locationResultDialog').is_visible()
             assert page.locator('#device').is_disabled()
             assert page.locator('#device').evaluate("e => e.selectedOptions[0].textContent.includes('Test iPhone')")
             assert page.locator('#device').evaluate("e => getComputedStyle(e).backgroundColor === getComputedStyle(document.getElementById('fuelRegion')).backgroundColor"), 'Disabled device selector must retain the themed background so its label stays readable'
@@ -151,7 +154,9 @@ def main():
             result.wait_for(state='visible')
             assert result.evaluate("e => e.matches(':modal')"), 'Result must block the workspace'
             assert page.locator('#locationResultHeading').inner_text() == 'Location set'
-            assert not page.locator('#locationResultMessage').is_visible()
+            assert page.locator('#locationResultMessage').is_visible()
+            assert page.locator('#locationResultMessage').inner_text() == 'Enjoy! Use Stop Location to restore your real location.'
+            assert page.locator('#locationResultMessage').evaluate("e => parseFloat(getComputedStyle(e).fontSize) < parseFloat(getComputedStyle(document.getElementById('locationResultHeading')).fontSize)")
             assert result.evaluate("e => getComputedStyle(e, '::backdrop').backgroundColor === getComputedStyle(document.getElementById('savedPlacesDialog'), '::backdrop').backgroundColor")
             assert page.locator('#locationResultSupport').is_visible()
             assert page.evaluate('locationResultAnimation.effect.getTiming().duration') == 6000
