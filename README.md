@@ -4,6 +4,12 @@ A portable Windows app for testing an iPhone's location and browsing reported Au
 
 [Download releases](https://github.com/sunheat/FuelLoc/releases) · [Build from source](docs/BUILDING.md) · [Support on Ko-fi](https://ko-fi.com/sunheat)
 
+## Why FuelLoc?
+
+- **No administrator prompt for everyday use.** FuelLoc replaces the original administrator-only Windows tunnel with an in-process userspace tunnel. It does not install drivers or create a virtual network adapter.
+- **The original project's telemetry and extra reporting are removed.** FuelLoc no longer sends connected-device identifiers, model, iOS version, connection type, or country to the original telemetry endpoint. The dormant visit-reporting code, remote broadcasts, remote version checks, and IP-geolocation lookup were also removed.
+- **Your workspace stays local.** Device controls run on loopback; preferences and saved places stay on your PC. Maps, search, routing, and fuel prices still use the external services described below.
+
 FuelLoc is a Windows-focused fork of GeoPort by davesc63, licensed under [GPLv3](LICENSE). Version 1.0.0 is the first FuelLoc release; it does not claim compatibility with every device supported by the original project.
 
 ![FuelLoc desktop workspace](docs/images/workspace.png)
@@ -21,14 +27,14 @@ Example workspace from automated acceptance checks; the device and fuel values s
 ## Requirements and compatibility
 
 - **Windows x64**, with Microsoft Edge or Google Chrome installed. The release is built and tested on Windows 11 x64; other Windows versions have not been verified.
-- **Apple Mobile Device Support**, included with iTunes, with its device service running.
+- **Apple Mobile Device Support**, included with iTunes, with its device service running. Missing drivers or service? Start with the [Apple device setup guide](docs/APPLE_DEVICE_SETUP.md), which links to Apple's current downloads and troubleshooting articles.
 - Your own iPhone, a data-capable USB cable, and a trusted pairing with this computer. Unlock the phone and accept **Trust This Computer** when prompted.
 - **Developer Mode** enabled on the phone under **Settings → Privacy & Security → Developer Mode**. Follow the phone's restart and confirmation prompts.
 - Internet access for map resources, address search, fuel prices, and any required developer-image download.
 
 The current device path targets iOS 17 and later. A real iPhone on iOS 18.7.7 has connected and disconnected, and a short set/clear command check succeeded through the portable EXE. The phone's displayed location was not independently verified. Older iOS versions, iPads, Wi-Fi connections, Windows ARM64, macOS, and Linux are not verified release targets.
 
-FuelLoc itself does not request administrator elevation or install a virtual network adapter. Installing Apple's support software may require administrator permission. See [the security review and its limits](SECURITY_AUDIT.md).
+FuelLoc deliberately leaves driver installation and system-service management to Apple's installer and Windows. This keeps driver setup separate from everyday location testing and lets FuelLoc run as a standard user without requesting administrator elevation. Installing or repairing Apple's support software may still require administrator permission. See the [short setup guide](docs/APPLE_DEVICE_SETUP.md) and [security review](SECURITY_AUDIT.md).
 
 ## Download and first launch
 
@@ -62,7 +68,7 @@ Preferences and saved places are stored locally in `%LOCALAPPDATA%\FuelLoc\state
 | Problem | What to check |
 | --- | --- |
 | EXE fails after moving or extracting it | Extract the whole ZIP again. Keep `FuelLoc.exe` and `_internal` together. The EXE under a developer's `build/` folder is only an intermediate artifact. |
-| Setup reports missing Apple support | Install or repair Apple Mobile Device Support / iTunes and ensure its service is running, then select **Recheck**. |
+| Setup reports missing Apple support | Follow the [Apple device setup guide](docs/APPLE_DEVICE_SETUP.md) to install or repair Apple's support software and check its service, then select **Recheck**. FuelLoc does not install drivers automatically. |
 | Phone does not appear | Use a data-capable USB cable, unlock the phone, accept the trust prompt, then choose **Refresh**. Check that Apple's software can see it. |
 | Connection or simulation fails | Check Developer Mode and the phone's prompts. Read the technical details, reconnect, and retry. Device and iOS compatibility is limited to the checks described above. |
 | Workspace does not open | Install Edge or Chrome. FuelLoc needs one of them for its app window. |

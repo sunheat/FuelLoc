@@ -11,6 +11,16 @@ and Developer Mode enabled on the phone. Internet access is needed for maps,
 search, fuel prices, and any required developer-image downloads.
 Tested device: iPhone on iOS 18.7.7. Other configurations are not verified.
 
+FuelLoc runs without an administrator prompt and does not install drivers or
+create a virtual network adapter. Apple driver/service setup is deliberately
+separate and may require administrator permission. Official download and
+troubleshooting links are collected here:
+https://github.com/sunheat/FuelLoc/blob/v1.0.0/docs/APPLE_DEVICE_SETUP.md
+
+The original project's device telemetry, extra visit reporting, remote
+broadcast/version requests, and IP-geolocation lookup have been removed.
+Maps, search, routing, and fuel prices still use external services.
+
 1. Start FuelLoc.exe. Choose Enter app once the local app is ready.
 2. Unlock and trust your phone. Refresh, select it, and Connect Device.
 3. Search an address or latitude, longitude; or double-click and drag a pin.
