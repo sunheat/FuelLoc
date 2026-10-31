@@ -1,6 +1,7 @@
 """Show the Windows startup window before loading the device stack."""
 
 import os
+from pathlib import Path
 import queue
 import sys
 import threading
@@ -19,6 +20,7 @@ if getattr(sys, "frozen", False):
 def main():
     root = tk.Tk()
     root.title("FuelLoc setup")
+    root.iconbitmap(default=str(Path(__file__).resolve().parent / 'static' / 'fuelloc.ico'))
     root.geometry("650x320")
     root.resizable(False, False)
     ttk.Label(root, text="Getting FuelLoc ready", font=("Segoe UI", 16, "bold")).pack(anchor="w", padx=24, pady=(20, 5))
