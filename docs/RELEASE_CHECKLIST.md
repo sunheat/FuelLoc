@@ -18,9 +18,9 @@
 
 ## Donations
 
-The selected launch approach is Ko-fi Free with an Australian PayPal account. The account and public Ko-fi URL are still pending. Keep the current coming-soon area non-clickable until the account exists; do not ship a placeholder payment URL.
+Keep the current coming-soon area non-clickable until a verified public FuelLoc donation URL is available; do not ship a placeholder payment URL.
 
-Once the account is ready, replace the placeholder with the verified public Ko-fi link, open it outside the app workspace, and check the complete donation flow on desktop. Confirm public display details and the intended currency in the actual accounts before publishing. Account creation and payment testing require the owner's participation.
+Once the public URL is available, open it outside the app workspace and check the complete donation flow on desktop before publishing.
 
 ## Explicitly deferred
 

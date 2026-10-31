@@ -10,3 +10,19 @@ FuelLoc is a personal, locally run Windows utility used with the owner's own iPh
 - Preserve GPLv3 license text and minimal upstream attribution. Do not reintroduce the original author's donation, survey, community, repository, or affiliate links into the app.
 
 These standards set review priority; they do not waive concrete defects or explicit requirements.
+
+## Agent skills
+
+The configuration files below are local to this checkout and must not be
+committed or published. If they are absent, ask the user to configure the
+skills locally before tracker-dependent work. Do not infer a tracker from
+another repository.
+
+### Issue tracker
+
+Use the locally configured issue tracker. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Use a single-context layout with root `CONTEXT.md` and `docs/adr/`.
+See `docs/agents/domain.md`.

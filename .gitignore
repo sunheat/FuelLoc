@@ -3,3 +3,14 @@ build/
 dist/
 *.spec
 __pycache__/
+
+# Local agent configuration must not be published.
+/docs/agents/issue-tracker.md
+/docs/agents/domain.md
+
+# Local credentials and user data.
+.env
+.env.*
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
