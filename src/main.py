@@ -11,6 +11,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -31,6 +32,9 @@ APP_VERSION = "0.1.0"
 PORT = 54321
 chosen_port = PORT
 fuel_data = None
+fuel_data_fetched_at = 0
+fuel_data_lock = threading.Lock()
+FUEL_CACHE_SECONDS = 300
 location = None
 
 
@@ -158,17 +162,21 @@ def local_requests_only():
 
 
 def get_fuel_data():
-    global fuel_data
-    if fuel_data is None:
+    global fuel_data, fuel_data_fetched_at
+    with fuel_data_lock:
+        if fuel_data is not None and time.monotonic() - fuel_data_fetched_at < FUEL_CACHE_SECONDS:
+            return fuel_data
         try:
             with urlopen(FUEL_API, timeout=10) as response:
                 payload = response.read(2_000_001)
                 if len(payload) > 2_000_000:
                     raise ValueError("Fuel-price response is too large")
                 fuel_data = json.loads(payload)
+                fuel_data_fetched_at = time.monotonic()
         except Exception as error:
+            fuel_data = None
             logger.warning("Fuel prices unavailable: %s", error)
-    return fuel_data
+        return fuel_data
 
 
 @app.get("/")
