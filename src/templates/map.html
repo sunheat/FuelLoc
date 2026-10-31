@@ -1787,14 +1787,15 @@ function showModalWifiModeRequired() {
 
 
     let fuelRequestId = 0;
-    async function handleFuelTypeChange() {
+    async function handleFuelTypeChange(explicitFuelSelection = false) {
     const requestId = ++fuelRequestId;
     var fuelTypeDropdown = document.getElementById('fuelType');
     var fuelText = document.getElementById('fuelText');
     var fuelRegionDropdown = document.getElementById('fuelRegion');
     const selectedFuelRegion = fuelRegionDropdown.value;
-    const selectedFuelType = fuelTypeDropdown.value || workspacePreferences.fuel_type;
-    savePreferences({fuel_region: selectedFuelRegion, fuel_type: selectedFuelType || ''});
+    if (explicitFuelSelection) savePreferences({fuel_type: fuelTypeDropdown.value});
+    const selectedFuelType = workspacePreferences.fuel_type;
+    savePreferences({fuel_region: selectedFuelRegion});
     const fuelStatus = document.getElementById('fuelStatus');
     fuelStatus.textContent = 'Loading fuel prices…';
     document.getElementById('fuelDataCollapse').classList.remove('show');

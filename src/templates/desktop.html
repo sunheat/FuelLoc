@@ -32,7 +32,7 @@
                     <p class="help-text fuel-intro">Compare the best reported prices across Australia.</p>
                     <div class="fuel-filters">
                         <div id="fuelRegionSection"><label for="fuelRegion">Region</label><select class="form-select" id="fuelRegion" onchange="handleFuelTypeChange()"><option value="All">All Australia</option><option value="ACT">ACT</option><option value="NSW">NSW</option><option value="QLD">QLD</option><option value="VIC">VIC</option><option value="WA">WA</option></select></div>
-                        <div id="fuelTypeSection"><label for="fuelType">Fuel type</label><select class="form-select" id="fuelType" onchange="handleFuelTypeChange()"></select></div>
+                        <div id="fuelTypeSection"><label for="fuelType">Fuel type</label><select class="form-select" id="fuelType" onchange="handleFuelTypeChange(true)"></select></div>
                     </div>
                     <p id="fuelStatus" class="help-text" role="status"></p>
                     <div class="collapse" id="fuelDataCollapse"><label for="fuelText" class="visually-hidden">Fuel price details</label><textarea class="form-control" id="fuelText" rows="4" readonly aria-label="Fuel price details"></textarea></div>
