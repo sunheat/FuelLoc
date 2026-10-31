@@ -3,6 +3,77 @@ let workspacePreferences = {};
 let savedLocations = [];
 let preferenceWrites = Promise.resolve();
 let locationToName = null;
+let locationActionPending = false;
+let locationResultTimer;
+
+function showLocationResult(restoring, error = null) {
+    const dialog = document.getElementById('locationResultDialog');
+    const countdown = document.getElementById('locationResultCountdown');
+    clearInterval(locationResultTimer);
+    document.getElementById('locationResultHeading').textContent = error
+        ? 'Location change not confirmed'
+        : restoring ? 'Real location restored' : 'Location changed successfully';
+    document.getElementById('locationResultMessage').textContent = error
+        ? error.message
+        : restoring ? 'Location simulation has stopped. Your device can use its real location again.'
+            : 'Your device is now using the selected location.';
+    document.getElementById('locationResultSupport').hidden = Boolean(error) || restoring;
+    const details = document.getElementById('locationResultDetails');
+    details.hidden = !error;
+    details.open = false;
+    document.getElementById('locationResultTechnical').textContent = error?.technical || '';
+    countdown.hidden = Boolean(error);
+    countdown.textContent = '';
+    if (!error) {
+        const deadline = Date.now() + (restoring ? 3000 : 6000);
+        const updateCountdown = () => {
+            const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            countdown.textContent = `Closes in ${seconds} second${seconds === 1 ? '' : 's'}`;
+            if (!seconds) dialog.close();
+        };
+        locationResultTimer = setInterval(updateCountdown, 250);
+        updateCountdown();
+    }
+    dialog.onclose = () => { if (!dialog.open) clearInterval(locationResultTimer); };
+    if (!dialog.open) dialog.showModal();
+    document.getElementById('locationResultOK').focus();
+}
+
+async function changeDeviceLocation(restoring) {
+    if (locationActionPending) return;
+    locationActionPending = true;
+    for (const id of ['set-location', 'stop-location', 'disconnect']) {
+        document.getElementById(id).disabled = true;
+    }
+    try {
+        const endpoint = restoring ? '/stop_location' : '/set_location';
+        const response = await fetch(endpoint, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}',
+        });
+        const body = await response.text();
+        const expected = restoring ? 'Location cleared successfully' : 'Location set successfully';
+        if (!response.ok || body !== expected) {
+            showLocationResult(restoring, {
+                message: response.status === 400 && !restoring
+                    ? 'Select a point on the map, then try again.'
+                    : 'We could not confirm the location change. Check the USB connection, unlock your device and reconnect it before retrying.',
+                technical: `${endpoint} — HTTP ${response.status}\n${body}`,
+            });
+            return;
+        }
+        showLocationResult(restoring);
+    } catch (error) {
+        showLocationResult(restoring, {
+            message: 'We could not confirm the location change because the local app could not be reached. Check your device and restart FuelLoc if needed.',
+            technical: String(error),
+        });
+    } finally {
+        locationActionPending = false;
+        updateSetLocationButtonStatus();
+        updateStopLocationButtonStatus();
+        document.getElementById('disconnect').disabled = false;
+    }
+}
 
 async function stateRequest(url, method = 'GET', data) {
     const response = await fetch(url, {

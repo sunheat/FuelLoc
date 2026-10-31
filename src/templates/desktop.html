@@ -54,8 +54,18 @@
             <div class="map-hint"><span>Double-click to place a pin · Drag to move</span><span>Ctrl + scroll to zoom</span></div>
         </section>
     </main>
-    <footer class="app-footer"><span>FuelLoc <span class="version">{{ app_version_num }}</span></span><span>Buy me a beer (coming soon)</span></footer>
+    <footer class="app-footer"><span>FuelLoc <span class="version">{{ app_version_num }}</span></span><a class="support-link" href="https://ko-fi.com/sunheat" target="_blank" rel="noopener noreferrer">🧋 Buy me a bubble tea</a></footer>
 </div>
+<dialog id="locationResultDialog" aria-labelledby="locationResultHeading" aria-describedby="locationResultMessage">
+    <h2 id="locationResultHeading"></h2>
+    <p id="locationResultMessage"></p>
+    <div id="locationResultSupport" hidden>
+        <p>Enjoying FuelLoc? Your support helps keep it going.</p>
+        <a class="btn btn-outline-secondary support-link" href="https://ko-fi.com/sunheat" target="_blank" rel="noopener noreferrer">🧋 Buy me a bubble tea on Ko-fi</a>
+    </div>
+    <details id="locationResultDetails" hidden><summary>Technical details</summary><pre id="locationResultTechnical"></pre></details>
+    <div class="places-actions"><span id="locationResultCountdown" class="help-text" role="timer"></span><button type="button" id="locationResultOK" class="btn btn-primary" autofocus onclick="this.closest('dialog').close()">OK</button></div>
+</dialog>
 <dialog id="savedPlacesDialog" aria-labelledby="savedPlacesHeading">
     <div class="places-heading"><h2 id="savedPlacesHeading">Saved places &amp; recent locations</h2><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()" aria-label="Close saved places">Close</button></div>
     <p class="help-text">Preview a place before simulating. Successful simulations add to the latest 50 unnamed locations; named places stay until deleted.</p>

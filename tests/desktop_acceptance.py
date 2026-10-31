@@ -62,6 +62,9 @@ def main():
             "/api/data/U91": {"type": "U91", "price": 170.9, "suburb": "Sydney", "state": "NSW", "lat": -33.86, "lng": 151.21},
             "/api/data/U95": {"type": "U95", "price": 180.9, "suburb": "Melbourne", "state": "VIC", "lat": -37.81, "lng": 144.96},
         }
+        if path in {'/set_location', '/stop_location'}:
+            route.fulfill(content_type='text/plain', body='Location set successfully' if path == '/set_location' else 'Location cleared successfully')
+            return
         route.fulfill(status=200, content_type="application/json", body=json.dumps(responses.get(path, "OK")))
 
     try:
@@ -129,8 +132,52 @@ def main():
             assert page.locator('#stop-location').is_enabled()
             assert_fits(page, controls + ['#disconnect'])
             page.locator('#set-location').click()
+            result = page.locator('#locationResultDialog')
+            result.wait_for(state='visible')
+            assert result.evaluate("e => e.matches(':modal')"), 'Result must block the workspace'
+            assert page.locator('#locationResultHeading').inner_text() == 'Location changed successfully'
+            assert page.locator('#locationResultSupport').is_visible()
+            assert '6 seconds' in page.locator('#locationResultCountdown').inner_text()
+            assert page.locator('#locationResultOK').evaluate('e => e === document.activeElement')
+            for link in page.locator('a.support-link').all():
+                assert link.get_attribute('href') == 'https://ko-fi.com/sunheat'
+                assert link.get_attribute('target') == '_blank'
+                assert 'noopener' in link.get_attribute('rel')
+            assert page.locator('.app-footer .support-link').evaluate("e => parseFloat(getComputedStyle(e).fontSize) === 13")
+            page.screenshot(path=str(ROOT / 'build/location-success-dark.png'))
+            result.wait_for(state='hidden', timeout=7500)
+            page.locator('#set-location').click()
+            result.wait_for(state='visible')
+            page.locator('#locationResultOK').click()
+            assert not result.is_visible()
             page.locator('#stop-location').click()
+            result.wait_for(state='visible')
+            assert page.locator('#locationResultHeading').inner_text() == 'Real location restored'
+            assert not page.locator('#locationResultSupport').is_visible()
+            assert '3 seconds' in page.locator('#locationResultCountdown').inner_text()
+            result.wait_for(state='hidden', timeout=4500)
+
+            def fail_location(route):
+                route.fulfill(status=503, content_type='application/json', body=json.dumps({'error': '<img src=x onerror="window.errorHTMLExecuted=true"> Device disconnected'}))
+
+            page.route(url + '/set_location', fail_location)
+            page.locator('#set-location').click()
+            result.wait_for(state='visible')
+            assert 'could not confirm' in page.locator('#locationResultMessage').inner_text()
+            assert not page.locator('#locationResultSupport').is_visible()
+            assert not page.locator('#locationResultDetails').evaluate('e => e.open')
+            page.locator('#locationResultDetails summary').click()
+            assert '<img' in page.locator('#locationResultTechnical').inner_text()
+            assert result.locator('img').count() == 0
+            assert not page.evaluate('window.errorHTMLExecuted || false')
+            assert not page.locator('#locationResultCountdown').is_visible()
+            page.screenshot(path=str(ROOT / 'build/location-error-dark.png'))
+            page.keyboard.press('Escape')
+            assert not result.is_visible()
+            page.unroute(url + '/set_location', fail_location)
             page.locator('#disconnect').click()
+            result.wait_for(state='visible')
+            page.locator('#locationResultOK').click()
             assert page.locator('#set-location').is_disabled()
             assert page.locator('#stop-location').is_disabled()
             for endpoint in ['/connect_device', '/update_location', '/set_location', '/stop_location']:
@@ -157,6 +204,9 @@ def main():
             assert not page.locator('div.leaflet-control-filelayer').is_visible()
             page.locator('#darkModeSwitch').uncheck()
             assert not page.locator('body').evaluate("e => e.classList.contains('dark-mode')")
+            page.evaluate('showLocationResult(false)')
+            page.screenshot(path=str(ROOT / 'build/location-success-light.png'))
+            page.locator('#locationResultOK').click()
             page.wait_for_timeout(250)
             page.screenshot(path=str(ROOT / 'build/desktop-light.png'))
             page.wait_for_function("document.getElementById('fuelStatus').textContent === ''")

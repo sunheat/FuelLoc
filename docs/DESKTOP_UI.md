@@ -21,9 +21,16 @@ Ordinary wheel gestures do not zoom the map. Ctrl + wheel and the zoom buttons d
 
 ## Repeatable checks
 
+Location actions show a native modal dialog only after the local device endpoint confirms success. Simulating shows an optional SunHeat Ko-fi link and closes after six seconds; stopping shows no support link and closes after three seconds. OK and Escape dismiss immediately. The backdrop uses 22% black so the workspace remains readable. The footer keeps a 13px support link available between actions. Both links open a separate browsing context with `noopener noreferrer`; no Ko-fi widget scripts or payment frames load in the local app.
+
+Failed or unconfirmed requests show recovery guidance and collapsed technical details rendered as plain text. Errors wait for acknowledgement. While a request is pending, the simulate, stop and disconnect buttons prevent duplicate actions. Keyboard movement and route playback retain their existing silent-success behavior.
+
+Developer tools remain available. FuelLoc runs an ordinary Edge/Chrome app window; hiding its tools would not enforce the local HTTP security boundary. Loopback binding, Host and cross-origin write checks, and coordinate validation remain in place. Pasting untrusted code into a console can act with the page's permissions (self-XSS); the browser's existing protections are unchanged. See [Chrome's self-XSS explanation](https://developer.chrome.com/blog/self-xss).
+
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 node tests\test_connect_ui.js
+node tests\test_location_feedback.js
 .venv\Scripts\python.exe -m pip install playwright
 .venv\Scripts\python.exe tests\desktop_acceptance.py
 ```

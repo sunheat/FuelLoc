@@ -1904,39 +1904,11 @@ function setLocationArrows() {
 
 
     function setLocation() {
-        fetch('/set_location', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({}),
-        })
-            .then(response => response.text())
-            .then(data => {
-                displayToast(data); // Display response as a toast
-                console.log('set_location response:', data);
-            })
-            .catch(error => {
-                console.error('Error setting location:', error);
-            });
+        return changeDeviceLocation(false);
     }
 
     function stopLocation() {
-        fetch('/stop_location', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({}),
-        })
-            .then(response => response.text())
-            .then(data => {
-                displayToast(data); // Display response as a toast
-                console.log('stop_location response:', data);
-            })
-            .catch(error => {
-                console.error('Error stopping location:', error);
-            });
+        return changeDeviceLocation(true);
     }
 
     // Function to enable or disable the Set Location button based on conditions
@@ -1945,7 +1917,7 @@ function setLocationArrows() {
         var rsdDataElement = document.getElementById('rsdData');
         var coordinatesInput = document.getElementById('coordinates');
         var enableButton = rsdDataElement.value.trim() !== '' && coordinatesInput.value.trim() !== '';
-        setLocationButton.disabled = !enableButton;
+        setLocationButton.disabled = locationActionPending || !enableButton;
     }
 
     // Function to enable or disable the Stop Location button based on conditions
@@ -1953,7 +1925,7 @@ function setLocationArrows() {
         var stopLocationButton = document.getElementById('stop-location');
         var rsdDataElement = document.getElementById('rsdData');
         var enableButton = rsdDataElement.value.trim() !== '';
-        stopLocationButton.disabled = !enableButton;
+        stopLocationButton.disabled = locationActionPending || !enableButton;
     }
 
     function exitApp() {
