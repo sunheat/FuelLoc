@@ -34,6 +34,7 @@
 {% include 'desktop.html' %}
 
 <script>
+{% include 'workspace.js' %}
 //=========================== leaflet menu ====================
 L.Control.LeafletMenu = L.Control.extend({
     options: {
@@ -188,6 +189,7 @@ L.leafletMenu = function(a, b) {
         // Disable Dark Mode
         document.body.classList.remove("dark-mode");
       }
+      savePreferences({dark_mode: darkModeSwitch.checked});
     }
 
 
@@ -1077,6 +1079,7 @@ let currentLayer = null;
 // Function to set coordinates
 function setCoordinates(lat, lng) {
     document.getElementById('coordinates').value = lat + ', ' + lng;
+    document.getElementById('savePlace').disabled = false;
     updateSetLocationButtonStatus();
     updateStopLocationButtonStatus(); // Add this line to update the Stop Location button status
     fetch('/update_location', {
@@ -1437,6 +1440,7 @@ function resetPlaybackFlag() {
 
 // Function to handle keyboard directional key presses
 function handleKeyDown(event) {
+    if (!marker || event.target.closest?.('input, textarea, select, button, dialog, [contenteditable="true"]') || event.ctrlKey || event.metaKey || event.altKey) return;
     const stepSize = 0.0001; // Adjust this value as needed
     const latLng = marker.getLatLng();
     console.log('key down');
@@ -1543,6 +1547,7 @@ function populateDeviceList() {
         var fuelTypeSection = document.getElementById('fuelTypeSection');
         var fuelRegionSection = document.getElementById('fuelRegionSection');
         var enableFuelPricesCheckbox = document.getElementById('enableFuelPrices');
+        savePreferences({fuel_enabled: enableFuelPricesCheckbox.checked});
         if (fuelTypeSection && fuelRegionSection && enableFuelPricesCheckbox) {
             fuelTypeSection.style.display = enableFuelPricesCheckbox.checked ? 'block' : 'none';
             fuelRegionSection.style.display = enableFuelPricesCheckbox.checked ? 'block' : 'none';
@@ -1807,12 +1812,16 @@ function showModalWifiModeRequired() {
 
 
 
-    async function handleFuelTypeChange() {
+    let fuelRequestId = 0;
+    async function handleFuelTypeChange(explicitFuelSelection = false) {
+    const requestId = ++fuelRequestId;
     var fuelTypeDropdown = document.getElementById('fuelType');
     var fuelText = document.getElementById('fuelText');
     var fuelRegionDropdown = document.getElementById('fuelRegion');
     const selectedFuelRegion = fuelRegionDropdown.value;
-    const selectedFuelType = fuelTypeDropdown.value;
+    if (explicitFuelSelection) savePreferences({fuel_type: fuelTypeDropdown.value});
+    const selectedFuelType = workspacePreferences.fuel_type;
+    savePreferences({fuel_region: selectedFuelRegion});
     const fuelStatus = document.getElementById('fuelStatus');
     fuelStatus.textContent = 'Loading fuel prices…';
     document.getElementById('fuelDataCollapse').classList.remove('show');
@@ -1824,6 +1833,7 @@ function showModalWifiModeRequired() {
         const response = await fetch(`/api/fuel_types?region=${selectedFuelRegion}`);
         if (!response.ok) throw new Error('Fuel prices unavailable');
         const fuelTypes = await response.json();
+        if (requestId !== fuelRequestId) return;
         fuelTypes.sort();
         fuelTypes.forEach(type => {
             var option = document.createElement('option');
@@ -1834,17 +1844,18 @@ function showModalWifiModeRequired() {
         const activeFuelType = fuelTypes.includes(selectedFuelType) ? selectedFuelType : fuelTypes[0];
         if (activeFuelType) {
             fuelTypeDropdown.value = activeFuelType;
-            updateFuelText(activeFuelType, selectedFuelRegion);
+            updateFuelText(activeFuelType, selectedFuelRegion, requestId);
         } else {
             fuelStatus.textContent = 'No prices available for this region.';
         }
     } catch (error) {
+        if (requestId !== fuelRequestId) return;
         fuelStatus.textContent = 'Fuel prices unavailable. Toggle fuel mode or change region to retry.';
         console.error('Error fetching fuel types:', error);
     }
 }
 
-async function updateFuelText(selectedFuelType, selectedFuelRegion) {
+async function updateFuelText(selectedFuelType, selectedFuelRegion, requestId) {
     var fuelTypeDropdown = document.getElementById('fuelType');
     var fuelText = document.getElementById('fuelText');
     var fuelDataCollapse = document.getElementById('fuelDataCollapse');
@@ -1852,7 +1863,7 @@ async function updateFuelText(selectedFuelType, selectedFuelRegion) {
         const response = await fetch(`/api/data/${selectedFuelType}?region=${selectedFuelRegion}`);
         if (!response.ok) throw new Error('Fuel price details unavailable');
         const fuelTypeData = await response.json();
-        if (!document.getElementById('enableFuelPrices').checked) return;
+        if (requestId !== fuelRequestId || !document.getElementById('enableFuelPrices').checked) return;
         document.getElementById('fuelStatus').textContent = '';
         fuelText.value = `${fuelTypeData.type} · ${fuelTypeData.price} c/L\n${fuelTypeData.suburb}, ${fuelTypeData.state}\n${fuelTypeData.lat}, ${fuelTypeData.lng}`;
         const position = [Number(fuelTypeData.lat), Number(fuelTypeData.lng)];
@@ -1867,6 +1878,7 @@ async function updateFuelText(selectedFuelType, selectedFuelRegion) {
         map.setView(position, 13);
         fuelDataCollapse.classList.toggle('show', document.getElementById('enableFuelPrices').checked && !!fuelTypeData);
     } catch (error) {
+        if (requestId !== fuelRequestId) return;
         document.getElementById('fuelStatus').textContent = 'Fuel price details unavailable. Change region or fuel type to retry.';
         console.error('Error fetching fuel type data:', error);
     }
@@ -2129,8 +2141,11 @@ function continueAfterDeveloperModeRequired() {
 
 
     document.addEventListener('DOMContentLoaded', async function () {
+    await loadWorkspaceState();
     await initializeMap();
-    handleFuelTypeChange();
+    document.getElementById('fuelTypeSection').style.display = document.getElementById('enableFuelPrices').checked ? 'block' : 'none';
+    document.getElementById('fuelRegionSection').style.display = document.getElementById('enableFuelPrices').checked ? 'block' : 'none';
+    if (document.getElementById('enableFuelPrices').checked) handleFuelTypeChange();
     document.getElementById('rsdData').addEventListener('change', updateSetLocationButtonStatus);
     document.getElementById('coordinates').addEventListener('input', updateSetLocationButtonStatus);
     populateDeviceList();

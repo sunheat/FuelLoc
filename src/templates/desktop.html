@@ -2,6 +2,7 @@
     <header class="app-header">
         <div class="brand"><img class="brand-icon" src="{{ url_for('static', filename='fuelloc-256.png') }}" width="40" height="40" alt=""><div><h1>FuelLoc</h1><span class="subtitle">Your location, anywhere.</span></div></div>
         <div class="header-actions">
+            <button type="button" class="btn btn-outline-secondary" onclick="openSavedLocations()">Saved places</button>
             <span class="local-badge"><span aria-hidden="true">●</span> Local workspace</span>
             <label class="theme-switch" for="darkModeSwitch"><input type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()" checked> Dark mode</label>
             <button type="button" class="btn btn-outline-secondary" id="exit-btn" onclick="exitApp()">Exit</button>
@@ -31,7 +32,7 @@
                     <p class="help-text fuel-intro">Compare the best reported prices across Australia.</p>
                     <div class="fuel-filters">
                         <div id="fuelRegionSection"><label for="fuelRegion">Region</label><select class="form-select" id="fuelRegion" onchange="handleFuelTypeChange()"><option value="All">All Australia</option><option value="ACT">ACT</option><option value="NSW">NSW</option><option value="QLD">QLD</option><option value="VIC">VIC</option><option value="WA">WA</option></select></div>
-                        <div id="fuelTypeSection"><label for="fuelType">Fuel type</label><select class="form-select" id="fuelType" onchange="handleFuelTypeChange()"></select></div>
+                        <div id="fuelTypeSection"><label for="fuelType">Fuel type</label><select class="form-select" id="fuelType" onchange="handleFuelTypeChange(true)"></select></div>
                     </div>
                     <p id="fuelStatus" class="help-text" role="status"></p>
                     <div class="collapse" id="fuelDataCollapse"><label for="fuelText" class="visually-hidden">Fuel price details</label><textarea class="form-control" id="fuelText" rows="4" readonly aria-label="Fuel price details"></textarea></div>
@@ -55,3 +56,19 @@
     </main>
     <footer class="app-footer"><span>FuelLoc <span class="version">{{ app_version_num }}</span></span><span>Buy me a beer (coming soon)</span></footer>
 </div>
+<dialog id="savedPlacesDialog" aria-labelledby="savedPlacesHeading">
+    <div class="places-heading"><h2 id="savedPlacesHeading">Saved places &amp; recent locations</h2><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()" aria-label="Close saved places">Close</button></div>
+    <p class="help-text">Preview a place before simulating. Successful simulations add to the latest 50 unnamed locations; named places stay until deleted.</p>
+    <button type="button" class="btn btn-primary" id="savePlace" onclick="saveCurrentPlace()" disabled>Save current location</button>
+    <p id="noSavedPlaces" class="help-text">No saved places yet.</p>
+    <ul id="savedPlacesList"></ul>
+</dialog>
+<dialog id="locationNameDialog" aria-labelledby="locationNameHeading">
+    <form onsubmit="submitLocationName(event)">
+        <h2 id="locationNameHeading">Name this location</h2>
+        <p id="placeNameCoordinates" class="help-text"></p>
+        <label for="placeName">Name (optional)</label>
+        <input id="placeName" class="form-control" maxlength="80" autocomplete="off">
+        <div class="places-actions"><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()">Cancel</button><button id="savePlaceName" type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+</dialog>

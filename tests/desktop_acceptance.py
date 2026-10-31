@@ -8,6 +8,8 @@ No requests reach a real phone. External map libraries use their pinned URLs.
 import json
 from pathlib import Path
 import runpy
+import sys
+import tempfile
 import threading
 
 from playwright.sync_api import sync_playwright
@@ -15,6 +17,7 @@ from werkzeug.serving import make_server
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'src'))
 
 
 def assert_fits(page, selectors):
@@ -36,6 +39,8 @@ def assert_fits(page, selectors):
 def main():
     (ROOT / "build").mkdir(exist_ok=True)
     namespace = runpy.run_path(str(ROOT / "src/main.py"), run_name="desktop_test")
+    state_directory = tempfile.TemporaryDirectory()
+    namespace['user_state'].STATE_PATH = Path(state_directory.name) / 'state.sqlite3'
     server = make_server("127.0.0.1", 0, namespace["app"], threaded=True)
     namespace["local_requests_only"].__globals__["chosen_port"] = server.server_port
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -46,6 +51,9 @@ def main():
 
     def api(route):
         path = route.request.url.split(url)[1].split("?")[0]
+        if path.startswith(('/api/user_state', '/api/preferences', '/api/locations')):
+            route.continue_()
+            return
         calls.append((path, route.request.post_data))
         responses = {
             "/list_devices": {"test-phone": {"USB": [phone]}},
@@ -151,6 +159,60 @@ def main():
             assert not page.locator('body').evaluate("e => e.classList.contains('dark-mode')")
             page.wait_for_timeout(250)
             page.screenshot(path=str(ROOT / 'build/desktop-light.png'))
+            page.wait_for_function("document.getElementById('fuelStatus').textContent === ''")
+            page.reload(wait_until='networkidle')
+            page.wait_for_function("document.getElementById('fuelText').value.includes('Melbourne')")
+            assert not page.locator('#darkModeSwitch').is_checked()
+            assert page.locator('#fuelRegion').input_value() == 'VIC'
+            assert page.locator('#fuelType').input_value() == 'U95'
+            page.get_by_role('button', name='Saved places', exact=True).click()
+            page.locator('#savePlace').click()
+            page.locator('#placeName').fill('<Home & office>')
+            page.locator('#placeName').press('ArrowLeft')
+            assert page.locator('#coordinates').input_value() == '-37.81, 144.96', 'Editing moved the map pin'
+            page.locator('#savePlaceName').click()
+            page.wait_for_function("document.querySelectorAll('#savedPlacesList li').length === 1")
+            assert page.locator('.place-preview').inner_text() == '<Home & office>'
+            page.get_by_role('button', name='Close saved places').click()
+            page.reload(wait_until='networkidle')
+            page.get_by_role('button', name='Saved places', exact=True).click()
+            assert page.locator('.place-preview').inner_text() == '<Home & office>'
+            page.get_by_role('button', name='Name <Home & office>', exact=True).click()
+            page.locator('#placeName').fill('Home')
+            page.locator('#savePlaceName').click()
+            page.wait_for_function("document.querySelector('.place-preview').textContent === 'Home'")
+            page.locator('.place-preview').click()
+            assert not page.locator('#savedPlacesDialog').is_visible()
+            assert page.locator('#coordinates').input_value() == '-37.81, 144.96'
+            page.get_by_role('button', name='Saved places', exact=True).click()
+            page.once('dialog', lambda dialog: dialog.accept())
+            page.get_by_role('button', name='Delete Home', exact=True).click()
+            page.wait_for_function("document.querySelectorAll('#savedPlacesList li').length === 0")
+            page.get_by_role('button', name='Close saved places').click()
+            page.locator('#enableFuelPrices').uncheck()
+            page.reload(wait_until='networkidle')
+            assert not page.locator('#enableFuelPrices').is_checked()
+            assert not page.locator('#fuelType').is_visible()
+            page.locator('#enableFuelPrices').check()
+            page.wait_for_function("document.getElementById('fuelText').value.includes('Melbourne')")
+            print('PASS: preferences survive reload; saved places safely name, preview and delete; editing does not move the pin')
+            page.evaluate("""async () => {
+                const originalFetch = window.fetch;
+                let release;
+                window.fetch = (url, options) => url === '/api/fuel_types?region=NSW'
+                    ? new Promise(resolve => { release = () => resolve(new Response('["U91"]')); })
+                    : originalFetch(url, options);
+                try {
+                    document.getElementById('fuelRegion').value = 'NSW';
+                    const pending = handleFuelTypeChange();
+                    document.getElementById('fuelRegion').value = 'VIC';
+                    await handleFuelTypeChange();
+                    release();
+                    await pending;
+                } finally { window.fetch = originalFetch; }
+            }""")
+            page.wait_for_function("document.getElementById('fuelText').value.includes('Melbourne')")
+            assert page.locator('#fuelType').input_value() == 'U95', 'A stale region request overwrote the latest selection'
             page.locator('#darkModeSwitch').check()
             page.wait_for_timeout(250)
             page.locator('.toast.show').evaluate_all("elements => elements.forEach(e => bootstrap.Toast.getOrCreateInstance(e).hide())")
@@ -170,6 +232,7 @@ def main():
             browser.close()
     finally:
         server.shutdown()
+        state_directory.cleanup()
 
 
 if __name__ == "__main__":

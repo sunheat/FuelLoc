@@ -95,6 +95,15 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .modal-content, .toast, .toast-header { background: var(--panel); color: var(--text); border-color: var(--line); }
 .modal-header, .modal-footer { border-color: var(--line); }
 .dark-mode .btn-close { filter: invert(1); }
+dialog { width: min(540px, 90vw); max-height: 80vh; overflow: auto; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); }
+dialog::backdrop { background: #0008; }
+.places-heading, .places-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.places-actions { justify-content: flex-end; margin-top: 18px; }
+#savePlace { margin-top: 14px; }
+#savedPlacesList { list-style: none; margin: 14px 0 0; padding: 0; }
+#savedPlacesList li { display: flex; gap: 7px; margin-top: 8px; }
+.place-preview { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+#locationNameDialog label { display: block; margin: 14px 0 6px; }
 @media (max-height: 760px) {
     .desktop-app { grid-template-rows: 60px minmax(0, 1fr) 24px; }
     .workspace { padding-top: 10px; gap: 10px; }

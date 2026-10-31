@@ -7,6 +7,8 @@ import unittest
 from unittest.mock import Mock, patch
 import runpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+
 
 class StartupTests(unittest.TestCase):
     @unittest.skipUnless(sys.platform == "win32", "Windows work-area API")
@@ -39,6 +41,7 @@ class DeviceImportGuard(importlib.abc.MetaPathFinder):
             raise AssertionError("Device stack imported before the local interface was ready")
 
 sys.meta_path.insert(0, DeviceImportGuard())
+sys.path.insert(0, 'src')
 namespace = runpy.run_path("src/main.py", run_name="startup_test")
 with namespace["app"].test_client() as client:
     assert client.get("/").status_code == 200
