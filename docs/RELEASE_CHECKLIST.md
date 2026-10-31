@@ -18,9 +18,7 @@
 
 ## Donations
 
-Keep the current coming-soon area non-clickable until a verified public FuelLoc donation URL is available; do not ship a placeholder payment URL.
-
-Once the public URL is available, open it outside the app workspace and check the complete donation flow on desktop before publishing.
+The app links to the owner's supplied public page at `https://ko-fi.com/sunheat` from the footer and successful simulation dialog. Before publishing, open both links outside the app workspace and check the donation flow on desktop. The local app must never load payment scripts or handle payment details.
 
 ## Explicitly deferred
 

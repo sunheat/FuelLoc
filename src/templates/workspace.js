@@ -3,6 +3,95 @@ let workspacePreferences = {};
 let savedLocations = [];
 let preferenceWrites = Promise.resolve();
 let locationToName = null;
+let locationActionPending = false;
+let locationResultAnimation;
+let workspaceNotificationTimer;
+
+function updateLocationCountdownPause() {
+    if (!locationResultAnimation) return;
+    const hovering = ['locationResultSupport', 'locationResultOK'].some(id => {
+        const element = document.getElementById(id);
+        return !element.hidden && element.matches(':hover');
+    });
+    if (hovering) locationResultAnimation.pause();
+    else locationResultAnimation.play();
+}
+
+function showWorkspaceNotification(message) {
+    const notification = document.getElementById('workspaceNotification');
+    clearTimeout(workspaceNotificationTimer);
+    notification.textContent = message;
+    notification.hidden = false;
+    workspaceNotificationTimer = setTimeout(() => { notification.hidden = true; }, 4000);
+}
+
+function showLocationResult(restoring, error = null) {
+    const dialog = document.getElementById('locationResultDialog');
+    const countdown = document.getElementById('locationResultCountdown');
+    locationResultAnimation?.cancel();
+    locationResultAnimation = null;
+    document.getElementById('locationResultHeading').textContent = error
+        ? 'Location change not confirmed'
+        : restoring ? 'Location restored' : 'Location set';
+    document.getElementById('locationResultMessage').textContent = error
+        ? error.message
+        : restoring ? '' : 'Enjoy! Use Stop Location to restore your real location.';
+    document.getElementById('locationResultMessage').hidden = !error && restoring;
+    document.getElementById('locationResultSupport').hidden = Boolean(error) || restoring;
+    const details = document.getElementById('locationResultDetails');
+    details.hidden = !error;
+    details.open = false;
+    document.getElementById('locationResultTechnical').textContent = error?.technical || '';
+    countdown.toggleAttribute('hidden', Boolean(error));
+    dialog.onclose = () => { if (!dialog.open) locationResultAnimation?.cancel(); };
+    if (!dialog.open) dialog.showModal();
+    document.getElementById('locationResultOK').focus();
+    if (!error) {
+        locationResultAnimation = document.getElementById('locationResultRing').animate(
+            [{strokeDashoffset: 0}, {strokeDashoffset: -100}],
+            {duration: restoring ? 3000 : 6000, fill: 'forwards'},
+        );
+        locationResultAnimation.onfinish = () => dialog.close();
+        updateLocationCountdownPause();
+    }
+}
+
+async function changeDeviceLocation(restoring, notifyOnly = false) {
+    if (locationActionPending) return;
+    locationActionPending = true;
+    for (const id of ['set-location', 'stop-location', 'disconnect']) {
+        document.getElementById(id).disabled = true;
+    }
+    try {
+        const endpoint = restoring ? '/stop_location' : '/set_location';
+        const response = await fetch(endpoint, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}',
+        });
+        const body = await response.text();
+        const expected = restoring ? 'Location cleared successfully' : 'Location set successfully';
+        if (!response.ok || body !== expected) {
+            showLocationResult(restoring, {
+                message: response.status === 400 && !restoring
+                    ? 'Select a point on the map, then try again.'
+                    : 'We could not confirm the location change. Check the USB connection, unlock your device and reconnect it before retrying.',
+                technical: `${endpoint} — HTTP ${response.status}\n${body}`,
+            });
+            return;
+        }
+        if (notifyOnly) showWorkspaceNotification('Device disconnected');
+        else showLocationResult(restoring);
+    } catch (error) {
+        showLocationResult(restoring, {
+            message: 'We could not confirm the location change because the local app could not be reached. Check your device and restart FuelLoc if needed.',
+            technical: String(error),
+        });
+    } finally {
+        locationActionPending = false;
+        updateSetLocationButtonStatus();
+        updateStopLocationButtonStatus();
+        document.getElementById('disconnect').disabled = false;
+    }
+}
 
 async function stateRequest(url, method = 'GET', data) {
     const response = await fetch(url, {
@@ -10,7 +99,9 @@ async function stateRequest(url, method = 'GET', data) {
         headers: {'Content-Type': 'application/json'},
         body: data === undefined ? undefined : JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Local data could not be saved or loaded. Please retry.');
+    if (!response.ok) throw new Error(response.status === 409
+        ? 'Saved places are full (30 locations). Delete a named place before adding another.'
+        : 'Local data could not be saved or loaded. Please retry.');
     return response.json();
 }
 
@@ -94,6 +185,7 @@ function renderSavedLocations() {
 
 function nameLocation(place) {
     locationToName = place;
+    document.getElementById('placeNameError').textContent = '';
     document.getElementById('placeName').value = place.name || '';
     document.getElementById('placeNameCoordinates').textContent = `${place.lat}, ${place.lng}`;
     document.getElementById('locationNameDialog').showModal();
@@ -109,6 +201,7 @@ function saveCurrentPlace() {
 async function submitLocationName(event) {
     event.preventDefault();
     const button = document.getElementById('savePlaceName');
+    document.getElementById('placeNameError').textContent = '';
     button.disabled = true;
     try {
         savedLocations = await stateRequest('/api/locations', 'POST', {
@@ -117,7 +210,7 @@ async function submitLocationName(event) {
         renderSavedLocations();
         document.getElementById('locationNameDialog').close();
     } catch (error) {
-        displayToast(error.message);
+        document.getElementById('placeNameError').textContent = error.message;
     } finally {
         button.disabled = false;
     }

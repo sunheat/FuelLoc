@@ -30,7 +30,7 @@ logger = logging.getLogger("FuelLoc")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 app = Flask(__name__)
 FUEL_API = "https://projectzerothree.info/api.php?format=json"
-APP_VERSION = "0.1.0"
+APP_VERSION = "1.0.0"
 PORT = 54321
 chosen_port = PORT
 fuel_data = None
@@ -231,7 +231,8 @@ def save_user_location():
             raise ValueError("Invalid location name")
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "Invalid location"}), 400
-    user_state.save_location(latitude, longitude, name.strip())
+    if not user_state.save_location(latitude, longitude, name.strip()):
+        return jsonify({"error": "Saved places are full. Delete a named place before adding another."}), 409
     return jsonify(user_state.read_state()["locations"])
 
 

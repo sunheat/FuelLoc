@@ -21,9 +21,18 @@ Ordinary wheel gestures do not zoom the map. Ctrl + wheel and the zoom buttons d
 
 ## Repeatable checks
 
+Location actions show a native modal dialog only after the local device endpoint confirms success. A single short heading says **Location set** or **Location restored**. Simulating shows an optional SunHeat Ko-fi link and closes after six seconds; stopping shows no support link and closes after three seconds. A self-contained SVG border around OK recedes clockwise instead of showing countdown text. Hovering the support area or OK pauses the native animation and auto-close; leaving resumes the remaining time. OK and Escape dismiss immediately. The backdrop matches Saved places. The footer keeps a 13px support link available between actions. Both links open a separate browsing context with `noopener noreferrer`; no Ko-fi widget scripts or payment frames load in the local app.
+
+Connection and disconnect success show a four-second noninteractive notification in the bottom-right of the map canvas, above the map hint and footer support link. It uses the current theme, text and spacing without external icons. Disconnect failures retain the error dialog and expandable diagnostics. Below **Location set**, smaller muted text reads: “Enjoy! Use Stop Location to restore your real location.” The short heading remains the primary message.
+
+Failed or unconfirmed requests show recovery guidance and collapsed technical details rendered as plain text. Errors wait for acknowledgement. While a request is pending, the simulate, stop and disconnect buttons prevent duplicate actions. Keyboard movement and route playback retain their existing silent-success behavior.
+
+Developer tools remain available. FuelLoc runs an ordinary Edge/Chrome app window; hiding its tools would not enforce the local HTTP security boundary. Loopback binding, Host and cross-origin write checks, and coordinate validation remain in place. Pasting untrusted code into a console can act with the page's permissions (self-XSS); the browser's existing protections are unchanged. See [Chrome's self-XSS explanation](https://developer.chrome.com/blog/self-xss).
+
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 node tests\test_connect_ui.js
+node tests\test_location_feedback.js
 .venv\Scripts\python.exe -m pip install playwright
 .venv\Scripts\python.exe tests\desktop_acceptance.py
 ```
@@ -31,5 +40,7 @@ node tests\test_connect_ui.js
 Playwright is only a development dependency. The acceptance script uses installed Microsoft Edge, the real Flask-rendered template, and pinned external map libraries. It intercepts phone/fuel/geocoding requests so it never changes a real phone's location. It checks page/sidebar overflow at six sizes, map resizing, fuel defaults and filters, wheel gestures, connection and location actions, themes, and optional map tools. Screenshots are written under `build/`.
 
 The disconnect test also catches a pre-existing UI-state bug: selecting fuel after disconnect previously re-enabled location buttons because the hidden connection value remained populated. Disconnect now clears that value.
+
+Saved places sits immediately to the right of Search, sharing the location input row without taking sidebar space. The collection is capped at 30 total locations with named-place protection as described in `LOCAL_STATE.md`. Disabled device selectors keep the current theme's background and text colors: Bootstrap's default disabled background previously made the selected device name look blank in dark mode. The acceptance test starts with no phone, refreshes after a phone appears, and checks the connected selection and its disabled styling in both themes.
 
 Ordinary map scrolling briefly shows a translucent Ctrl + scroll hint. Holding Ctrl or leaving the map dismisses it. Ctrl + wheel and Ctrl + plus/minus/zero do not change page zoom; Windows display scaling remains native. App chrome suppresses the browser context menu while text fields retain their editing menu. Existing map-object menus remain available. The search field accepts either an address or a coordinate pair.

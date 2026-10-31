@@ -40,8 +40,38 @@ class UserStateTests(unittest.TestCase):
         for offset in range(60):
             user_state.save_location(offset, 10)
         places = user_state.read_state()['locations']
-        self.assertEqual(len(places), 51)
+        self.assertEqual(len(places), 30)
         self.assertEqual(places[-1]['name'], 'Keep me')
+        self.assertEqual(places[0]['lat'], 59)
+
+    def test_full_named_collection_rejects_new_saves_but_allows_revisits(self):
+        for offset in range(30):
+            user_state.save_location(offset, 10, f'Place {offset}')
+        response = self.client.post('/api/locations', json={'lat': 40, 'lng': 10, 'name': 'New place'})
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(len(user_state.read_state()['locations']), 30)
+        self.assertFalse(user_state.save_location(40, 10))
+        self.client.post('/update_location', json={'lat': 40, 'lng': 10})
+        function_globals = self.namespace['set_location'].__globals__
+        session = SimpleNamespace(runner=SimpleNamespace(run=lambda value: value), set_location=lambda *args: None)
+        with patch.dict(function_globals, {'session': session}):
+            self.assertEqual(self.client.post('/set_location').status_code, 200)
+        self.assertEqual(len(user_state.read_state()['locations']), 30)
+        user_state.save_location(0, 10, 'Renamed')
+        places = user_state.read_state()['locations']
+        self.assertEqual(len(places), 30)
+        self.assertEqual(places[0]['name'], 'Renamed')
+
+    def test_existing_overflow_preserves_named_places(self):
+        with user_state.database() as connection:
+            connection.executemany('INSERT INTO locations (lat, lng, name) VALUES (?, 10, ?)',
+                                   [(offset, f'Named {offset}') for offset in range(31)])
+            connection.executemany('INSERT INTO locations (lat, lng) VALUES (?, 10)',
+                                   [(offset,) for offset in range(40, 80)])
+        places = user_state.read_state()['locations']
+        self.assertEqual(len(places), 31)
+        self.assertTrue(all(place['name'] for place in places))
+        self.assertFalse(user_state.save_location(80, 10, 'Extra'))
 
     def test_invalid_and_cross_origin_writes_are_rejected(self):
         for payload in [{'dark_mode': 'false'}, {'fuel_region': []}, {'unknown': 1}, []]:
