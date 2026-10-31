@@ -12,23 +12,32 @@ async function main() {
     const elements = Object.fromEntries([
         'locationResultDialog', 'locationResultHeading', 'locationResultMessage',
         'locationResultSupport', 'locationResultDetails', 'locationResultTechnical',
-        'locationResultCountdown', 'locationResultOK', 'set-location', 'stop-location', 'disconnect',
+        'locationResultCountdown', 'locationResultRing', 'locationResultOK', 'workspaceNotification',
+        'set-location', 'stop-location', 'disconnect',
     ].map(id => [id, {textContent: '', hidden: false, open: false, disabled: false,
         showModal() { this.open = true; },
         close() { this.open = false; this.onclose?.(); }, focus() {},
+        matches() { return this.hovered || false; },
+        toggleAttribute(name, value) { this[name] = value; },
     }]));
     const toasts = [];
     let response = {ok: false, status: 503, text: async () => '{"error":"<img src=x onerror=alert(1)>"}'};
-    let tick;
-    let now = 0;
+    let animation;
+    let notificationTimeout;
+    elements.locationResultRing.animate = (frames, options) => {
+        animation = {frames, options, playState: 'running',
+            pause() { this.playState = 'paused'; },
+            play() { this.playState = 'running'; },
+            cancel() { this.playState = 'idle'; },
+        };
+        return animation;
+    };
     const context = vm.createContext({
         document: {getElementById: id => elements[id]},
         fetch: async () => response,
         displayToast: message => toasts.push(message), console,
         updateSetLocationButtonStatus() {}, updateStopLocationButtonStatus() {},
-        setInterval(callback) { tick = callback; return 1; },
-        clearInterval() { tick = null; },
-        Date: {now: () => now},
+        setTimeout(callback, duration) { notificationTimeout = {callback, duration}; return 1; }, clearTimeout() {},
     });
     vm.runInContext(template('workspace.js'), context);
     vm.runInContext(html.slice(start, end), context);
@@ -39,28 +48,45 @@ async function main() {
     assert.equal(elements.locationResultSupport.hidden, true);
     assert.equal(elements.locationResultDetails.open, false);
     assert.match(elements.locationResultTechnical.textContent, /<img/);
-    assert.equal(tick, null, 'Errors must wait for acknowledgement');
+    assert.equal(animation, undefined, 'Errors must wait for acknowledgement');
 
     response = {ok: true, status: 200, text: async () => 'Location set successfully'};
     await context.setLocation();
     assert.equal(elements.locationResultSupport.hidden, false);
-    assert.match(elements.locationResultCountdown.textContent, /6 seconds/);
-    now = 5999; tick();
-    assert.equal(elements.locationResultDialog.open, true);
-    now = 6000; tick();
+    assert.equal(elements.locationResultMessage.hidden, true, 'Success needs a single concise message');
+    assert.equal(animation.options.duration, 6000);
+    assert.equal(animation.frames[1].strokeDashoffset, -100, 'The ring must recede clockwise');
+    for (const id of ['locationResultSupport', 'locationResultOK']) {
+        elements[id].hovered = true;
+        context.updateLocationCountdownPause();
+        assert.equal(animation.playState, 'paused');
+        elements[id].hovered = false;
+        context.updateLocationCountdownPause();
+        assert.equal(animation.playState, 'running');
+    }
+    animation.onfinish();
     assert.equal(elements.locationResultDialog.open, false);
-    assert.equal(tick, null);
+    assert.equal(animation.playState, 'idle');
 
     response = {ok: true, status: 200, text: async () => 'Location cleared successfully'};
     await context.stopLocation();
     assert.equal(elements.locationResultSupport.hidden, true);
-    assert.match(elements.locationResultCountdown.textContent, /3 seconds/);
+    assert.equal(animation.options.duration, 3000);
     elements.locationResultDialog.close();
-    assert.equal(tick, null, 'Manual dismissal must cancel the old timer');
+    assert.equal(animation.playState, 'idle', 'Manual dismissal must cancel the old timer');
+
+    await context.stopLocation(true);
+    assert.equal(elements.locationResultDialog.open, false, 'Disconnect success must not open the restore modal');
+    assert.equal(elements.workspaceNotification.hidden, false);
+    assert.equal(elements.workspaceNotification.textContent, 'Device disconnected');
+    assert.equal(notificationTimeout.duration, 4000);
+    notificationTimeout.callback();
+    assert.equal(elements.workspaceNotification.hidden, true);
 
     response = {ok: true, status: 200, text: async () => '{"error":"Device unavailable"}'};
-    await context.stopLocation();
+    await context.stopLocation(true);
     assert.equal(elements.locationResultCountdown.hidden, true, 'Unexpected 200 responses must not show success');
+    assert.equal(elements.locationResultDialog.open, true, 'Disconnect failures must still show an error dialog');
     assert.equal(elements.locationResultSupport.hidden, true);
     context.fetch = async () => { throw new Error('Network unavailable'); };
     await context.stopLocation();
@@ -80,6 +106,6 @@ async function main() {
     await pending;
     assert.equal(elements.locationResultDetails.hidden, true);
     assert.equal(elements.locationResultTechnical.textContent, '');
-    console.log('PASS: location errors stay literal; confirmed success uses cancellable 6s/3s dialogs');
+    console.log('PASS: literal errors, concise success, pausable 6s/3s rings, and nonmodal disconnect feedback');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

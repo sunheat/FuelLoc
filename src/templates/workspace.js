@@ -4,42 +4,59 @@ let savedLocations = [];
 let preferenceWrites = Promise.resolve();
 let locationToName = null;
 let locationActionPending = false;
-let locationResultTimer;
+let locationResultAnimation;
+let workspaceNotificationTimer;
+
+function updateLocationCountdownPause() {
+    if (!locationResultAnimation) return;
+    const hovering = ['locationResultSupport', 'locationResultOK'].some(id => {
+        const element = document.getElementById(id);
+        return !element.hidden && element.matches(':hover');
+    });
+    if (hovering) locationResultAnimation.pause();
+    else locationResultAnimation.play();
+}
+
+function showWorkspaceNotification(message) {
+    const notification = document.getElementById('workspaceNotification');
+    clearTimeout(workspaceNotificationTimer);
+    notification.textContent = message;
+    notification.hidden = false;
+    workspaceNotificationTimer = setTimeout(() => { notification.hidden = true; }, 4000);
+}
 
 function showLocationResult(restoring, error = null) {
     const dialog = document.getElementById('locationResultDialog');
     const countdown = document.getElementById('locationResultCountdown');
-    clearInterval(locationResultTimer);
+    locationResultAnimation?.cancel();
+    locationResultAnimation = null;
     document.getElementById('locationResultHeading').textContent = error
         ? 'Location change not confirmed'
-        : restoring ? 'Real location restored' : 'Location changed successfully';
+        : restoring ? 'Location restored' : 'Location set';
     document.getElementById('locationResultMessage').textContent = error
         ? error.message
-        : restoring ? 'Location simulation has stopped. Your device can use its real location again.'
-            : 'Your device is now using the selected location.';
+        : '';
+    document.getElementById('locationResultMessage').hidden = !error;
     document.getElementById('locationResultSupport').hidden = Boolean(error) || restoring;
     const details = document.getElementById('locationResultDetails');
     details.hidden = !error;
     details.open = false;
     document.getElementById('locationResultTechnical').textContent = error?.technical || '';
-    countdown.hidden = Boolean(error);
-    countdown.textContent = '';
-    if (!error) {
-        const deadline = Date.now() + (restoring ? 3000 : 6000);
-        const updateCountdown = () => {
-            const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-            countdown.textContent = `Closes in ${seconds} second${seconds === 1 ? '' : 's'}`;
-            if (!seconds) dialog.close();
-        };
-        locationResultTimer = setInterval(updateCountdown, 250);
-        updateCountdown();
-    }
-    dialog.onclose = () => { if (!dialog.open) clearInterval(locationResultTimer); };
+    countdown.toggleAttribute('hidden', Boolean(error));
+    dialog.onclose = () => { if (!dialog.open) locationResultAnimation?.cancel(); };
     if (!dialog.open) dialog.showModal();
     document.getElementById('locationResultOK').focus();
+    if (!error) {
+        locationResultAnimation = document.getElementById('locationResultRing').animate(
+            [{strokeDashoffset: 0}, {strokeDashoffset: -100}],
+            {duration: restoring ? 3000 : 6000, fill: 'forwards'},
+        );
+        locationResultAnimation.onfinish = () => dialog.close();
+        updateLocationCountdownPause();
+    }
 }
 
-async function changeDeviceLocation(restoring) {
+async function changeDeviceLocation(restoring, notifyOnly = false) {
     if (locationActionPending) return;
     locationActionPending = true;
     for (const id of ['set-location', 'stop-location', 'disconnect']) {
@@ -61,7 +78,8 @@ async function changeDeviceLocation(restoring) {
             });
             return;
         }
-        showLocationResult(restoring);
+        if (notifyOnly) showWorkspaceNotification('Device disconnected');
+        else showLocationResult(restoring);
     } catch (error) {
         showLocationResult(restoring, {
             message: 'We could not confirm the location change because the local app could not be reached. Check your device and restart FuelLoc if needed.',

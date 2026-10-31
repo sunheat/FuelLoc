@@ -1770,7 +1770,7 @@ function showModalWifiModeRequired() {
         var connectButton = document.getElementById('connect');
         var disconnectButton = document.getElementById('disconnect');
         var deviceDropdown = document.getElementById('device');
-        stopLocation();
+        stopLocation(true);
         // Use navigator.sendBeacon to make the POST request without waiting for a response
         const data = JSON.stringify({});
         //navigator.sendBeacon('/stop_tunnel', data);
@@ -1907,8 +1907,8 @@ function setLocationArrows() {
         return changeDeviceLocation(false);
     }
 
-    function stopLocation() {
-        return changeDeviceLocation(true);
+    function stopLocation(notifyOnly = false) {
+        return changeDeviceLocation(true, notifyOnly);
     }
 
     // Function to enable or disable the Set Location button based on conditions

@@ -49,7 +49,7 @@
             <div class="map-toolbar"><div><h2 id="mapHeading">Location preview</h2><span class="help-text">Select one point on the map</span></div><button type="button" class="btn btn-outline-secondary" id="mapTools" aria-pressed="false" onclick="this.setAttribute('aria-pressed', document.getElementById('map').classList.toggle('show-tools'))">More map tools</button>
                 <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Address or latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button><button type="button" class="btn btn-outline-secondary" id="savedPlaces" onclick="openSavedLocations()">Saved places</button></div>
             </div>
-            <div class="map-canvas"><div id="map" aria-label="Location map"></div><div id="mapWheelHint" role="status" hidden>Hold Ctrl and scroll to zoom the map</div></div>
+            <div class="map-canvas"><div id="map" aria-label="Location map"></div><div id="mapWheelHint" role="status" hidden>Hold Ctrl and scroll to zoom the map</div><div id="workspaceNotification" role="status" hidden></div></div>
             <div class="map-hint"><span>Double-click to place a pin · Drag to move</span><span>Ctrl + scroll to zoom</span></div>
         </section>
     </main>
@@ -58,12 +58,11 @@
 <dialog id="locationResultDialog" aria-labelledby="locationResultHeading" aria-describedby="locationResultMessage">
     <h2 id="locationResultHeading"></h2>
     <p id="locationResultMessage"></p>
-    <div id="locationResultSupport" hidden>
-        <p>Enjoying FuelLoc? Your support helps keep it going.</p>
-        <a class="btn btn-outline-secondary support-link" href="https://ko-fi.com/sunheat" target="_blank" rel="noopener noreferrer">🧋 Buy me a bubble tea on Ko-fi</a>
+    <div id="locationResultSupport" hidden onmouseenter="updateLocationCountdownPause()" onmouseleave="updateLocationCountdownPause()">
+        <a class="btn btn-outline-secondary support-link" href="https://ko-fi.com/sunheat" target="_blank" rel="noopener noreferrer">🧋 Buy me a bubble tea</a>
     </div>
     <details id="locationResultDetails" hidden><summary>Technical details</summary><pre id="locationResultTechnical"></pre></details>
-    <div class="places-actions"><span id="locationResultCountdown" class="help-text" role="timer"></span><button type="button" id="locationResultOK" class="btn btn-primary" autofocus onclick="this.closest('dialog').close()">OK</button></div>
+    <div class="places-actions"><button type="button" id="locationResultOK" class="btn btn-primary" autofocus onclick="this.closest('dialog').close()" onmouseenter="updateLocationCountdownPause()" onmouseleave="updateLocationCountdownPause()">OK<svg id="locationResultCountdown" viewBox="0 0 64 44" preserveAspectRatio="none" aria-hidden="true"><path id="locationResultRing" pathLength="100" d="M32 2 H54 Q62 2 62 10 V34 Q62 42 54 42 H10 Q2 42 2 34 V10 Q2 2 10 2 Z"/></svg></button></div>
 </dialog>
 <dialog id="savedPlacesDialog" aria-labelledby="savedPlacesHeading">
     <div class="places-heading"><h2 id="savedPlacesHeading">Saved places &amp; recent locations</h2><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()" aria-label="Close saved places">Close</button></div>

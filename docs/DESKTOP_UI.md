@@ -21,7 +21,9 @@ Ordinary wheel gestures do not zoom the map. Ctrl + wheel and the zoom buttons d
 
 ## Repeatable checks
 
-Location actions show a native modal dialog only after the local device endpoint confirms success. Simulating shows an optional SunHeat Ko-fi link and closes after six seconds; stopping shows no support link and closes after three seconds. OK and Escape dismiss immediately. The backdrop uses 22% black so the workspace remains readable. The footer keeps a 13px support link available between actions. Both links open a separate browsing context with `noopener noreferrer`; no Ko-fi widget scripts or payment frames load in the local app.
+Location actions show a native modal dialog only after the local device endpoint confirms success. A single short heading says **Location set** or **Location restored**. Simulating shows an optional SunHeat Ko-fi link and closes after six seconds; stopping shows no support link and closes after three seconds. A self-contained SVG border around OK recedes clockwise instead of showing countdown text. Hovering the support area or OK pauses the native animation and auto-close; leaving resumes the remaining time. OK and Escape dismiss immediately. The backdrop matches Saved places. The footer keeps a 13px support link available between actions. Both links open a separate browsing context with `noopener noreferrer`; no Ko-fi widget scripts or payment frames load in the local app.
+
+Disconnect success shows a four-second noninteractive notification in the bottom-right of the map canvas, above the map hint and footer support link. It uses the current theme, text and spacing without external icons. Disconnect failures retain the error dialog and expandable diagnostics.
 
 Failed or unconfirmed requests show recovery guidance and collapsed technical details rendered as plain text. Errors wait for acknowledgement. While a request is pending, the simulate, stop and disconnect buttons prevent duplicate actions. Keyboard movement and route playback retain their existing silent-success behavior.
 

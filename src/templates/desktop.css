@@ -99,15 +99,18 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .dark-mode .btn-close { filter: invert(1); }
 dialog { width: min(540px, 90vw); max-height: 80vh; overflow: auto; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); }
 dialog::backdrop { background: #0008; }
-#locationResultDialog { width: min(460px, 90vw); box-shadow: 0 16px 56px #0003; }
-#locationResultDialog::backdrop { background: rgb(0 0 0 / 22%); }
-#locationResultHeading { font-size: 20px; margin-bottom: 10px; }
-#locationResultSupport { margin-top: 20px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--inset); }
-#locationResultSupport p { color: var(--muted); margin-bottom: 12px; }
+#locationResultDialog { width: min(380px, 90vw); box-shadow: 0 16px 56px #0003; }
+#locationResultHeading { font-size: 18px; }
+#locationResultMessage:not([hidden]) { margin-top: 10px; }
+#locationResultSupport { margin-top: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--inset); }
 #locationResultDetails { margin-top: 18px; }
 #locationResultDetails summary { cursor: pointer; color: var(--muted); }
 #locationResultTechnical { margin: 10px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; color: var(--muted); }
-#locationResultCountdown { margin: 0 auto 0 0; }
+#locationResultOK { position: relative; min-width: 48px; }
+#locationResultCountdown { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); overflow: visible; pointer-events: none; }
+#locationResultCountdown[hidden] { display: none; }
+#locationResultRing { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 100; vector-effect: non-scaling-stroke; }
+#workspaceNotification { position: absolute; bottom: 16px; right: 16px; z-index: 1003; max-width: min(320px, calc(100% - 32px)); padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); box-shadow: 0 6px 24px #0003; font-size: 13px; pointer-events: none; }
 .places-heading, .places-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .places-actions { justify-content: flex-end; margin-top: 18px; }
 #savePlace { margin-top: 14px; }

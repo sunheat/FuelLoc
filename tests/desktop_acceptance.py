@@ -150,9 +150,11 @@ def main():
             result = page.locator('#locationResultDialog')
             result.wait_for(state='visible')
             assert result.evaluate("e => e.matches(':modal')"), 'Result must block the workspace'
-            assert page.locator('#locationResultHeading').inner_text() == 'Location changed successfully'
+            assert page.locator('#locationResultHeading').inner_text() == 'Location set'
+            assert not page.locator('#locationResultMessage').is_visible()
+            assert result.evaluate("e => getComputedStyle(e, '::backdrop').backgroundColor === getComputedStyle(document.getElementById('savedPlacesDialog'), '::backdrop').backgroundColor")
             assert page.locator('#locationResultSupport').is_visible()
-            assert '6 seconds' in page.locator('#locationResultCountdown').inner_text()
+            assert page.evaluate('locationResultAnimation.effect.getTiming().duration') == 6000
             assert page.locator('#locationResultOK').evaluate('e => e === document.activeElement')
             for link in page.locator('a.support-link').all():
                 assert link.get_attribute('href') == 'https://ko-fi.com/sunheat'
@@ -163,13 +165,23 @@ def main():
             result.wait_for(state='hidden', timeout=7500)
             page.locator('#set-location').click()
             result.wait_for(state='visible')
+            for selector in ['#locationResultSupport', '#locationResultOK']:
+                page.locator(selector).hover()
+                page.wait_for_function("locationResultAnimation.playState === 'paused'")
+                before = page.evaluate('locationResultAnimation.currentTime')
+                page.wait_for_timeout(400)
+                assert abs(page.evaluate('locationResultAnimation.currentTime') - before) < 1, 'Hover must preserve remaining time'
+                page.locator('#locationResultHeading').hover()
+                page.wait_for_function("locationResultAnimation.playState === 'running'")
+                page.wait_for_timeout(150)
+                assert page.evaluate('locationResultAnimation.currentTime') > before, 'Leaving must resume the same countdown'
             page.locator('#locationResultOK').click()
             assert not result.is_visible()
             page.locator('#stop-location').click()
             result.wait_for(state='visible')
-            assert page.locator('#locationResultHeading').inner_text() == 'Real location restored'
+            assert page.locator('#locationResultHeading').inner_text() == 'Location restored'
             assert not page.locator('#locationResultSupport').is_visible()
-            assert '3 seconds' in page.locator('#locationResultCountdown').inner_text()
+            assert page.evaluate('locationResultAnimation.effect.getTiming().duration') == 3000
             result.wait_for(state='hidden', timeout=4500)
 
             def fail_location(route):
@@ -191,8 +203,17 @@ def main():
             assert not result.is_visible()
             page.unroute(url + '/set_location', fail_location)
             page.locator('#disconnect').click()
-            result.wait_for(state='visible')
-            page.locator('#locationResultOK').click()
+            notification = page.locator('#workspaceNotification')
+            notification.wait_for(state='visible')
+            assert notification.inner_text() == 'Device disconnected'
+            assert not result.is_visible()
+            box = notification.bounding_box()
+            canvas = page.locator('.map-canvas').bounding_box()
+            footer = page.locator('.app-footer .support-link').bounding_box()
+            assert box['x'] >= canvas['x'] and box['y'] >= canvas['y']
+            assert box['y'] + box['height'] < footer['y'], 'Disconnect feedback must not cover the support link'
+            page.screenshot(path=str(ROOT / 'build/disconnect-notification-dark.png'))
+            notification.wait_for(state='hidden', timeout=5500)
             assert page.locator('#set-location').is_disabled()
             assert page.locator('#stop-location').is_disabled()
             for endpoint in ['/connect_device', '/update_location', '/set_location', '/stop_location']:
