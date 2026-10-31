@@ -39,4 +39,6 @@ Playwright is only a development dependency. The acceptance script uses installe
 
 The disconnect test also catches a pre-existing UI-state bug: selecting fuel after disconnect previously re-enabled location buttons because the hidden connection value remained populated. Disconnect now clears that value.
 
+Saved places sits immediately to the right of Search, sharing the location input row without taking sidebar space. The collection is capped at 30 total locations with named-place protection as described in `LOCAL_STATE.md`. Disabled device selectors keep the current theme's background and text colors: Bootstrap's default disabled background previously made the selected device name look blank in dark mode. The acceptance test starts with no phone, refreshes after a phone appears, and checks the connected selection and its disabled styling in both themes.
+
 Ordinary map scrolling briefly shows a translucent Ctrl + scroll hint. Holding Ctrl or leaving the map dismisses it. Ctrl + wheel and Ctrl + plus/minus/zero do not change page zoom; Windows display scaling remains native. App chrome suppresses the browser context menu while text fields retain their editing menu. Existing map-object menus remain available. The search field accepts either an address or a coordinate pair.

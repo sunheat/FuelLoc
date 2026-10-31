@@ -2,7 +2,6 @@
     <header class="app-header">
         <div class="brand"><img class="brand-icon" src="{{ url_for('static', filename='fuelloc-256.png') }}" width="40" height="40" alt=""><div><h1>FuelLoc</h1><span class="subtitle">Your location, anywhere.</span></div></div>
         <div class="header-actions">
-            <button type="button" class="btn btn-outline-secondary" onclick="openSavedLocations()">Saved places</button>
             <span class="local-badge"><span aria-hidden="true">●</span> Local workspace</span>
             <label class="theme-switch" for="darkModeSwitch"><input type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()" checked> Dark mode</label>
             <button type="button" class="btn btn-outline-secondary" id="exit-btn" onclick="exitApp()">Exit</button>
@@ -48,7 +47,7 @@
         </aside>
         <section class="map-panel" aria-labelledby="mapHeading">
             <div class="map-toolbar"><div><h2 id="mapHeading">Location preview</h2><span class="help-text">Select one point on the map</span></div><button type="button" class="btn btn-outline-secondary" id="mapTools" aria-pressed="false" onclick="this.setAttribute('aria-pressed', document.getElementById('map').classList.toggle('show-tools'))">More map tools</button>
-                <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Address or latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button></div>
+                <div class="map-search"><label for="coordinates">Location</label><input type="text" class="form-control" id="coordinates" placeholder="Address or latitude, longitude" autocomplete="off"><button type="button" class="btn btn-outline-secondary" id="search">Search</button><button type="button" class="btn btn-outline-secondary" id="savedPlaces" onclick="openSavedLocations()">Saved places</button></div>
             </div>
             <div class="map-canvas"><div id="map" aria-label="Location map"></div><div id="mapWheelHint" role="status" hidden>Hold Ctrl and scroll to zoom the map</div></div>
             <div class="map-hint"><span>Double-click to place a pin · Drag to move</span><span>Ctrl + scroll to zoom</span></div>
@@ -68,7 +67,7 @@
 </dialog>
 <dialog id="savedPlacesDialog" aria-labelledby="savedPlacesHeading">
     <div class="places-heading"><h2 id="savedPlacesHeading">Saved places &amp; recent locations</h2><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()" aria-label="Close saved places">Close</button></div>
-    <p class="help-text">Preview a place before simulating. Successful simulations add to the latest 50 unnamed locations; named places stay until deleted.</p>
+    <p class="help-text">Preview a place before simulating. Keep up to 30 locations, including history. Oldest unnamed locations are replaced first; named places stay until deleted.</p>
     <button type="button" class="btn btn-primary" id="savePlace" onclick="saveCurrentPlace()" disabled>Save current location</button>
     <p id="noSavedPlaces" class="help-text">No saved places yet.</p>
     <ul id="savedPlacesList"></ul>
@@ -79,6 +78,7 @@
         <p id="placeNameCoordinates" class="help-text"></p>
         <label for="placeName">Name (optional)</label>
         <input id="placeName" class="form-control" maxlength="80" autocomplete="off">
+        <p id="placeNameError" role="alert"></p>
         <div class="places-actions"><button type="button" class="btn btn-outline-secondary" onclick="this.closest('dialog').close()">Cancel</button><button id="savePlaceName" type="submit" class="btn btn-primary">Save</button></div>
     </form>
 </dialog>

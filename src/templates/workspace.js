@@ -81,7 +81,9 @@ async function stateRequest(url, method = 'GET', data) {
         headers: {'Content-Type': 'application/json'},
         body: data === undefined ? undefined : JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Local data could not be saved or loaded. Please retry.');
+    if (!response.ok) throw new Error(response.status === 409
+        ? 'Saved places are full (30 locations). Delete a named place before adding another.'
+        : 'Local data could not be saved or loaded. Please retry.');
     return response.json();
 }
 
@@ -165,6 +167,7 @@ function renderSavedLocations() {
 
 function nameLocation(place) {
     locationToName = place;
+    document.getElementById('placeNameError').textContent = '';
     document.getElementById('placeName').value = place.name || '';
     document.getElementById('placeNameCoordinates').textContent = `${place.lat}, ${place.lng}`;
     document.getElementById('locationNameDialog').showModal();
@@ -180,6 +183,7 @@ function saveCurrentPlace() {
 async function submitLocationName(event) {
     event.preventDefault();
     const button = document.getElementById('savePlaceName');
+    document.getElementById('placeNameError').textContent = '';
     button.disabled = true;
     try {
         savedLocations = await stateRequest('/api/locations', 'POST', {
@@ -188,7 +192,7 @@ async function submitLocationName(event) {
         renderSavedLocations();
         document.getElementById('locationNameDialog').close();
     } catch (error) {
-        displayToast(error.message);
+        document.getElementById('placeNameError').textContent = error.message;
     } finally {
         button.disabled = false;
     }

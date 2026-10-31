@@ -8,6 +8,13 @@ import sqlite3
 
 STATE_PATH = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "FuelLoc" / "state.sqlite3"
 DEFAULTS = {"dark_mode": True, "fuel_enabled": True, "fuel_region": "All", "fuel_type": ""}
+MAX_LOCATIONS = 30
+
+
+def trim_location_history(connection):
+    # Preserve named places, including collections created before the limit existed.
+    connection.execute("""DELETE FROM locations WHERE name = '' AND id NOT IN
+        (SELECT id FROM locations ORDER BY (name != '') DESC, id DESC LIMIT ?)""", (MAX_LOCATIONS,))
 
 
 @contextmanager
@@ -21,6 +28,7 @@ def database():
             connection.execute("""CREATE TABLE IF NOT EXISTS locations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, lat REAL NOT NULL, lng REAL NOT NULL,
                 name TEXT NOT NULL DEFAULT '', UNIQUE(lat, lng))""")
+            trim_location_history(connection)
             yield connection
     finally:
         connection.close()
@@ -46,13 +54,17 @@ def save_preferences(values):
 def save_location(lat, lng, name=None):
     with database() as connection:
         previous = connection.execute("SELECT name FROM locations WHERE lat = ? AND lng = ?", (lat, lng)).fetchone()
+        if previous is None:
+            total, unnamed = connection.execute("SELECT COUNT(*), COUNT(CASE WHEN name = '' THEN 1 END) FROM locations").fetchone()
+            if total >= MAX_LOCATIONS and not unnamed:
+                return False
         if name is None:
             name = previous["name"] if previous else ""
-        # Revisit moves a point to the top, preserving its name. Named places never age out.
+        # Revisit moves a point to the top, preserving its name.
         connection.execute("DELETE FROM locations WHERE lat = ? AND lng = ?", (lat, lng))
         connection.execute("INSERT INTO locations (lat, lng, name) VALUES (?, ?, ?)", (lat, lng, name))
-        connection.execute("""DELETE FROM locations WHERE name = '' AND id NOT IN
-            (SELECT id FROM locations WHERE name = '' ORDER BY id DESC LIMIT 50)""")
+        trim_location_history(connection)
+    return True
 
 
 def delete_location(location_id):

@@ -46,6 +46,7 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_port}"
     calls = []
+    phone_connected = False
     phone = {"Identifier": "test-phone", "ConnectionType": "USB", "DeviceName": "Test iPhone",
              "DeviceClass": "iPhone", "ProductVersion": "18.7", "userLocale": "Australia"}
 
@@ -56,7 +57,7 @@ def main():
             return
         calls.append((path, route.request.post_data))
         responses = {
-            "/list_devices": {"test-phone": {"USB": [phone]}},
+            "/list_devices": {"test-phone": {"USB": [phone]}} if phone_connected else {},
             "/connect_device": {"rsd_data": "test-session"},
             "/api/fuel_types": ["U91", "U95"],
             "/api/data/U91": {"type": "U91", "price": 170.9, "suburb": "Sydney", "state": "NSW", "lat": -33.86, "lng": 151.21},
@@ -80,7 +81,9 @@ def main():
             page.wait_for_function("typeof map !== 'undefined' && map && map._loaded")
             assert page.locator('.brand-icon').evaluate('e => e.complete && e.naturalWidth === 256')
             assert page.request.get(url + '/static/fuelloc.ico').status == 200
-            controls = ["#device", "#refresh", "#connect", "#coordinates", "#search", "#set-location", "#stop-location", "#map"]
+            controls = ["#device", "#refresh", "#connect", "#coordinates", "#search", "#savedPlaces", "#set-location", "#stop-location", "#map"]
+            assert page.locator('.map-search #savedPlaces').count() == 1
+            assert page.locator('.app-header #savedPlaces').count() == 0
             page.screenshot(path=str(ROOT / "build/desktop-dark.png"))
             assert_fits(page, controls)
             assert page.locator('#enableFuelPrices').is_checked()
@@ -126,8 +129,20 @@ def main():
             page.wait_for_timeout(200)
             assert page.locator('#coordinates').input_value()
             assert page.locator('#set-location').is_disabled()
+            page.wait_for_function("document.getElementById('device').textContent.includes('No device found')")
+            phone_connected = True
+            page.locator('#refresh').click()
+            page.wait_for_function("document.getElementById('device').textContent.includes('Test iPhone')")
             page.locator('#connect').click()
             page.wait_for_function("document.getElementById('connectText').textContent === 'Connected'")
+            assert page.locator('#device').is_disabled()
+            assert page.locator('#device').evaluate("e => e.selectedOptions[0].textContent.includes('Test iPhone')")
+            assert page.locator('#device').evaluate("e => getComputedStyle(e).backgroundColor === getComputedStyle(document.getElementById('fuelRegion')).backgroundColor"), 'Disabled device selector must retain the themed background so its label stays readable'
+            page.locator('#darkModeSwitch').uncheck()
+            assert page.locator('#device').evaluate("e => getComputedStyle(e).backgroundColor === getComputedStyle(document.getElementById('fuelRegion')).backgroundColor"), 'Disabled device selector must match the light theme too'
+            page.screenshot(path=str(ROOT / 'build/device-connected-light.png'))
+            page.locator('#darkModeSwitch').check()
+            page.screenshot(path=str(ROOT / 'build/device-connected-dark.png'))
             assert page.locator('#set-location').is_enabled()
             assert page.locator('#stop-location').is_enabled()
             assert_fits(page, controls + ['#disconnect'])
@@ -239,6 +254,20 @@ def main():
             page.get_by_role('button', name='Delete Home', exact=True).click()
             page.wait_for_function("document.querySelectorAll('#savedPlacesList li').length === 0")
             page.get_by_role('button', name='Close saved places').click()
+            for offset in range(30):
+                assert page.request.post(url + '/api/locations', data={'lat': offset, 'lng': 10, 'name': f'Place {offset}'}).status == 200
+            page.get_by_role('button', name='Saved places', exact=True).click()
+            page.wait_for_function("document.querySelectorAll('#savedPlacesList li').length === 30")
+            page.locator('#savePlace').click()
+            page.locator('#placeName').fill('One too many')
+            page.locator('#savePlaceName').click()
+            page.wait_for_function("document.getElementById('placeNameError').textContent.includes('full (30 locations)')")
+            assert page.locator('#placeNameError').is_visible(), 'Capacity errors must be visible inside the active dialog'
+            assert page.locator('#locationNameDialog').is_visible()
+            page.get_by_role('button', name='Cancel', exact=True).click()
+            page.get_by_role('button', name='Close saved places').click()
+            for place in page.request.get(url + '/api/user_state').json()['locations']:
+                assert page.request.delete(url + f"/api/locations/{place['id']}").status == 200
             page.locator('#enableFuelPrices').uncheck()
             page.reload(wait_until='networkidle')
             assert not page.locator('#enableFuelPrices').is_checked()
