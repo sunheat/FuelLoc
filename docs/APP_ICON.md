@@ -6,11 +6,7 @@ The blue tile combines a location pin with a fuel pump. The same artwork is used
 - `src/static/fuelloc-256.png`: 256 × 256 header asset.
 - `src/static/fuelloc.ico`: Windows icon containing 16, 24, 32, 48, 64, 128, and 256 pixel images.
 
-Created with the built-in image generation tool. The prompt was:
-
-> Use case: logo-brand. Asset type: FuelLoc Windows desktop application icon, also used at 40 px in the app header. Create one finished square icon: a bold white location pin fused with a simple fuel pump silhouette, centered on a rich blue rounded-square tile matching #2563eb, with a restrained lighter-blue depth accent. Clean modern desktop icon, crisp large geometric shapes, excellent legibility at 16 and 32 pixels. The fuel pump and location pin should read as one coherent distinctive symbol. Transparent outside the rounded tile. No text, letters, numbers, mockup, multiple variants, surrounding scene, thin details, or watermark.
-
-Only output resizing and ICO encoding were applied after generation, preserving alpha. To reproduce the exports with Pillow available in the build environment:
+The source artwork was AI-generated for FuelLoc. Export resizing and ICO encoding preserve its alpha channel. To reproduce the exports with Pillow available in the build environment:
 
 ```python
 from pathlib import Path

@@ -16,5 +16,5 @@ Reviewed source: upstream commit `d38c7c550512d3d1e0e6c49de59a695d417bc5f0` in `
 
 - Fuel-price requests disclose the network IP address to `projectzerothree.info`, and map tiles/search disclose it to their providers. These services are part of the current user interface.
 - The app depends on third-party Python packages and pinned JavaScript. Source review does not guarantee that these components are free of vulnerabilities.
-- A paired iPhone running iOS 18.7.7 was discovered and connected through the userspace tunnel in a medium-integrity Windows process, then disconnected. A short set-and-clear location test at a user-selected address returned success through the portable EXE. The clear command ran immediately afterward. The phone's on-screen location was not independently observed.
+- Device access requires a trusted pairing and Developer Mode. Location controls act on the connected phone; use Stop Location before disconnecting.
 - The executable is unsigned. Windows may show a reputation warning on first use.

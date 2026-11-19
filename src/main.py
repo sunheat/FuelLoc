@@ -30,7 +30,7 @@ logger = logging.getLogger("FuelLoc")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 app = Flask(__name__)
 FUEL_API = "https://projectzerothree.info/api.php?format=json"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 PORT = 54321
 chosen_port = PORT
 fuel_data = None
@@ -61,8 +61,13 @@ class DeviceSession:
         self.simulation = None
         self.udid = None
         self.version = None
+        self._location_lock = asyncio.Lock()
 
     async def close_location(self):
+        async with self._location_lock:
+            await self._close_location()
+
+    async def _close_location(self):
         if self.simulation is not None:
             try:
                 await self.simulation.clear()
@@ -108,9 +113,11 @@ class DeviceSession:
         return rsd.service.address
 
     async def set_location(self, latitude, longitude):
-        if self.rsd is None:
-            raise RuntimeError("Connect an iOS device first")
-        if self.simulation is None:
+        async with self._location_lock:
+            if self.rsd is None:
+                raise RuntimeError("Connect an iOS device first")
+            # Some devices ignore replacement coordinates until the old simulation ends.
+            await self._close_location()
             from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
             from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
 
@@ -124,7 +131,7 @@ class DeviceSession:
                 raise
             self.dvt = dvt
             self.simulation = simulation
-        await self.simulation.set(latitude, longitude)
+            await self.simulation.set(latitude, longitude)
 
     async def enable_developer_mode(self, udid):
         from pymobiledevice3.lockdown import create_using_usbmux

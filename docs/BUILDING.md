@@ -7,8 +7,7 @@ Use Windows x64, Git, and Python **3.12 x64** with Tcl/Tk support (the normal py
 ```powershell
 git clone https://github.com/sunheat/FuelLoc.git
 cd FuelLoc
-# For the published 1.0.0 source, select its tag after release:
-# git checkout v1.0.0
+git checkout fuelloc-v1.0.1
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
@@ -41,24 +40,26 @@ powershell -ExecutionPolicy Bypass -File scripts/package.ps1
 
 This rebuilds the app and creates the following in `dist/release/`:
 
-- `FuelLoc-1.0.0-windows-x64.zip`: the complete `FuelLoc/` folder, executable, runtime, license, dependency notices, user instructions, release notes, and build information.
-- `FuelLoc-1.0.0-source.zip`: tracked source at the recorded commit, including build scripts and license. Local configuration and user data are excluded.
+- `FuelLoc-1.0.1-windows-x64.zip`: the complete `FuelLoc/` folder, executable, runtime, license, dependency notices, user instructions, release notes, and build information.
+- `FuelLoc-1.0.1-source.zip`: tracked source at the recorded commit, including build scripts and license. Local configuration and user data are excluded.
 - `SHA256SUMS.txt`: SHA-256 hashes of both archives.
 
 Version names come from `APP_VERSION` in `src/main.py`. Windows executable metadata in `packaging/windows-version-info.txt` must match. No script creates a tag, creates a GitHub Release, uploads files, signs the EXE, or publishes anything.
 
+The FuelLoc 1.0.1 release tag is `fuelloc-v1.0.1`. The existing `v1.0.1` tag belongs to inherited upstream history and must not be moved or reused.
+
 Extract the portable archive into a fresh folder and test that copy before publication. To compare a download with `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\FuelLoc-1.0.0-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\FuelLoc-1.0.1-windows-x64.zip -Algorithm SHA256
 ```
 
-Release publication is a separate, manual maintainer action after the [release checklist](RELEASE_CHECKLIST.md) and owner approval. Attach both archives and `SHA256SUMS.txt` to a release at the matching source commit.
+Follow the [release checklist](RELEASE_CHECKLIST.md) when publishing. Attach both archives and `SHA256SUMS.txt` to a release at the matching source commit.
 
-## macOS, Linux, and GitHub Actions
+## Other platforms
 
-FuelLoc 1.0.0 supports a Windows x64 distribution only. Its Tk icon setup, browser discovery, Apple device-service check, and build script assume Windows. Running PyInstaller on another system alone does not port or validate these paths. There is no supported macOS/Linux build command for this release.
+FuelLoc supports a Windows x64 distribution only. Its Tk icon setup, browser discovery, Apple device-service check, and build script assume Windows. Running PyInstaller on another system alone does not port or validate these paths. There is no supported macOS/Linux build command for this release.
 
-[PyInstaller is not a cross-compiler](https://pyinstaller.org/en/stable/): build each supported platform on that platform. GitHub Actions can provide Windows, Linux, and macOS machines without owning those computers. [Standard GitHub-hosted runners are free for public repositories](https://docs.github.com/en/actions/concepts/billing-and-usage); larger runners and private-repository usage have different billing rules. Artifact storage has separate limits, so a future workflow should use short retention and review account budgets before storing large builds. This release does not require paid signing, a hosted build service, or an Actions workflow.
+[PyInstaller is not a cross-compiler](https://pyinstaller.org/en/stable/): build each supported platform on that platform.
 
 Before offering other-platform binaries, adapt the platform-specific paths, build on native runners, and verify startup and a real-device set/clear cycle on each claimed platform. A successful CI build alone is insufficient evidence of iPhone compatibility.

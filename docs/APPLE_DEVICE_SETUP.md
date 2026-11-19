@@ -1,6 +1,6 @@
 # Apple device support on Windows
 
-FuelLoc 1.0.0 needs Apple's USB device drivers and a reachable Apple device service before it can connect to an iPhone. The release has been checked with Apple Mobile Device Support, included with iTunes. FuelLoc's startup screen checks the service and connected devices; it does not install or repair system components.
+FuelLoc needs Apple's USB device drivers and a reachable Apple device service before it can connect to an iPhone. The release has been checked with Apple Mobile Device Support, included with iTunes. FuelLoc's startup screen checks the service and connected devices; it does not install or repair system components.
 
 ## Start with Apple's maintained instructions
 
@@ -8,9 +8,15 @@ FuelLoc 1.0.0 needs Apple's USB device drivers and a reachable Apple device serv
 - **The PC cannot see the phone:** follow Apple's [device-recognition troubleshooting](https://support.apple.com/en-us/108643) for USB cables, ports, and trusting the computer. First check that Apple's own software recognizes the unlocked iPhone. That establishes USB recognition; it does not by itself prove FuelLoc's Developer Mode or location connection is ready.
 - **iTunes reports that Apple Mobile Device Service is not running:** follow Apple's [AMDS restart guide](https://support.apple.com/en-la/102347).
 
-These links delegate changing download locations and installation steps to Apple. Apple's current guidance may recommend Apple Devices; FuelLoc has not separately verified every Apple software or driver distribution. For this release, the decisive checks are that FuelLoc reports its Apple device service as reachable and can list the trusted USB phone. An existing working Apple setup does not need replacing just to run FuelLoc.
+Use Apple's official downloads and installation instructions. Confirm that FuelLoc can reach the Apple device service and list the trusted USB phone. An existing working Apple setup does not need replacing just to run FuelLoc.
 
 After installation or repair, reconnect and unlock the phone, accept its trust prompt, and choose **Recheck** in FuelLoc's setup window or **Refresh** in the workspace. Enable Developer Mode on the phone and follow its confirmation/restart prompts before connecting for location testing.
+
+## Changing an active simulated location
+
+Choose another point and press **Simulate Location** again. FuelLoc restores the previous simulation before setting the new coordinates while keeping the device connected. A successful replacement shows one **Location set** dialog. If restoration or setting fails, FuelLoc reports the error. The phone may briefly use its real GPS location between simulations.
+
+If Apple Maps remains centered on the previous place, tap its current-location button to recenter before checking the location dot.
 
 ## Why FuelLoc does not install drivers for you
 

@@ -9,13 +9,15 @@ const start = html.indexOf('    function setLocation() {');
 const end = html.indexOf('// Function to enable or disable the Set Location button', start);
 
 async function main() {
+    let dialogCount = 0;
+    const requests = [];
     const elements = Object.fromEntries([
         'locationResultDialog', 'locationResultHeading', 'locationResultMessage',
         'locationResultSupport', 'locationResultDetails', 'locationResultTechnical',
         'locationResultCountdown', 'locationResultRing', 'locationResultOK', 'workspaceNotification',
         'set-location', 'stop-location', 'disconnect',
     ].map(id => [id, {textContent: '', hidden: false, open: false, disabled: false,
-        showModal() { this.open = true; },
+        showModal() { this.open = true; dialogCount++; },
         close() { this.open = false; this.onclose?.(); }, focus() {},
         matches() { return this.hovered || false; },
         toggleAttribute(name, value) { this[name] = value; },
@@ -34,7 +36,7 @@ async function main() {
     };
     const context = vm.createContext({
         document: {getElementById: id => elements[id]},
-        fetch: async () => response,
+        fetch: async url => { requests.push(url); return response; },
         displayToast: message => toasts.push(message), console,
         updateSetLocationButtonStatus() {}, updateStopLocationButtonStatus() {},
         setTimeout(callback, duration) { notificationTimeout = {callback, duration}; return 1; }, clearTimeout() {},
@@ -68,6 +70,14 @@ async function main() {
     animation.onfinish();
     assert.equal(elements.locationResultDialog.open, false);
     assert.equal(animation.playState, 'idle');
+
+    const dialogsBeforeReplacement = dialogCount;
+    requests.length = 0;
+    await context.setLocation();
+    assert.deepEqual(requests, ['/set_location'], 'Replacement uses one server operation');
+    assert.equal(dialogCount, dialogsBeforeReplacement + 1, 'Replacement opens just one result dialog');
+    assert.equal(elements.locationResultHeading.textContent, 'Location set');
+    animation.onfinish();
 
     response = {ok: true, status: 200, text: async () => 'Location cleared successfully'};
     await context.stopLocation();
