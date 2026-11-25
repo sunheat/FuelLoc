@@ -4,6 +4,9 @@ let savedLocations = [];
 let preferenceWrites = Promise.resolve();
 let locationToName = null;
 let locationActionPending = false;
+let deviceActionPending = false;
+let deviceStatusPending = false;
+let deviceStateRevision = 0;
 let locationResultAnimation;
 let workspaceNotificationTimer;
 
@@ -57,7 +60,8 @@ function showLocationResult(restoring, error = null) {
 }
 
 async function changeDeviceLocation(restoring, notifyOnly = false) {
-    if (locationActionPending) return;
+    if (locationActionPending || deviceActionPending) return;
+    deviceStateRevision++;
     locationActionPending = true;
     for (const id of ['set-location', 'stop-location', 'disconnect']) {
         document.getElementById(id).disabled = true;
@@ -90,6 +94,7 @@ async function changeDeviceLocation(restoring, notifyOnly = false) {
         updateSetLocationButtonStatus();
         updateStopLocationButtonStatus();
         document.getElementById('disconnect').disabled = false;
+        populateDeviceList();
     }
 }
 

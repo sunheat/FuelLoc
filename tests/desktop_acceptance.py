@@ -47,17 +47,26 @@ def main():
     url = f"http://127.0.0.1:{server.server_port}"
     calls = []
     phone_connected = False
+    session_connected = False
     phone = {"Identifier": "test-phone", "ConnectionType": "USB", "DeviceName": "Test iPhone",
              "DeviceClass": "iPhone", "ProductVersion": "18.7", "userLocale": "Australia"}
 
     def api(route):
+        nonlocal session_connected
         path = route.request.url.split(url)[1].split("?")[0]
         if path.startswith(('/api/user_state', '/api/preferences', '/api/locations')):
             route.continue_()
             return
         calls.append((path, route.request.post_data))
+        if path == '/connect_device':
+            session_connected = True
+        elif path == '/stop_tunnel':
+            session_connected = False
         responses = {
             "/list_devices": {"test-phone": {"USB": [phone]}} if phone_connected else {},
+            "/device_status": {"devices": {"test-phone": {"USB": [phone]}} if phone_connected else {},
+                               "udid": "test-phone" if session_connected else None,
+                               "rsd_data": "test-session" if session_connected else ""},
             "/connect_device": {"rsd_data": "test-session"},
             "/api/fuel_types": ["U91", "U95"],
             "/api/data/U91": {"type": "U91", "price": 170.9, "suburb": "Sydney", "state": "NSW", "lat": -33.86, "lng": 151.21},
@@ -131,8 +140,7 @@ def main():
             assert page.locator('#set-location').is_disabled()
             page.wait_for_function("document.getElementById('device').textContent.includes('No device found')")
             phone_connected = True
-            page.locator('#refresh').click()
-            page.wait_for_function("document.getElementById('device').textContent.includes('Test iPhone')")
+            page.wait_for_function("document.getElementById('device').textContent.includes('Test iPhone')", timeout=8000)
             page.locator('#connect').click()
             page.wait_for_function("document.getElementById('connectText').textContent === 'Connected'")
             page.locator('#workspaceNotification').wait_for(state='visible')
@@ -221,9 +229,26 @@ def main():
             notification.wait_for(state='hidden', timeout=5500)
             assert page.locator('#set-location').is_disabled()
             assert page.locator('#stop-location').is_disabled()
-            for endpoint in ['/connect_device', '/update_location', '/set_location', '/stop_location']:
+            for endpoint in ['/connect_device', '/update_location', '/set_location', '/stop_location', '/stop_tunnel']:
                 assert any(path == endpoint for path, _ in calls), endpoint
             print('PASS: connection, map selection, location set, stop, and disconnect')
+
+            page.locator('#connect').click()
+            page.wait_for_function("document.getElementById('rsdData').value === 'test-session'")
+            phone_connected = session_connected = False
+            page.wait_for_function("document.getElementById('rsdData').value === ''", timeout=8000)
+            assert page.locator('#set-location').is_disabled()
+            assert page.locator('#stop-location').is_disabled()
+            assert page.locator('#device').is_enabled()
+            assert 'connection lost' in page.locator('#connectError').inner_text()
+            phone_connected = True
+            page.wait_for_function("document.getElementById('device').textContent.includes('Test iPhone')", timeout=8000)
+            assert page.locator('#set-location').is_disabled()
+            page.locator('#connect').click()
+            page.wait_for_function("document.getElementById('rsdData').value === 'test-session'")
+            page.locator('#disconnect').click()
+            page.wait_for_function("document.getElementById('rsdData').value === ''")
+            print('PASS: automatic cable-loss state sync and replug discovery without Refresh')
 
             page.locator('#fuelType').select_option('U95')
             page.wait_for_function("document.getElementById('fuelText').value.includes('Melbourne')")
@@ -323,7 +348,8 @@ def main():
             page.locator('.toast.show').evaluate_all("elements => elements.forEach(e => bootstrap.Toast.getOrCreateInstance(e).hide())")
             page.wait_for_timeout(200)
             page.screenshot(path=str(ROOT / 'build/desktop-dark.png'))
-            page.route(url + '/list_devices', lambda route: route.fulfill(content_type='application/json', body='{}'))
+            page.route(url + '/device_status', lambda route: route.fulfill(content_type='application/json', body=json.dumps(
+                {'devices': {}, 'udid': None, 'rsd_data': ''})))
             page.locator('#refresh').click()
             page.wait_for_function("document.getElementById('device').textContent.includes('No device found')")
             page.route(url + '/api/fuel_types**', lambda route: route.fulfill(status=503, content_type='application/json', body='{}'))

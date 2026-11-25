@@ -49,7 +49,12 @@ class AsyncRunner:
         self.thread.start()
 
     def run(self, coroutine, timeout=40):
-        return asyncio.run_coroutine_threadsafe(coroutine, self.loop).result(timeout)
+        future = asyncio.run_coroutine_threadsafe(asyncio.wait_for(coroutine, timeout), self.loop)
+        try:
+            return future.result(timeout + 20)
+        except TimeoutError:
+            future.cancel()
+            raise
 
 
 class DeviceSession:
@@ -61,39 +66,77 @@ class DeviceSession:
         self.simulation = None
         self.udid = None
         self.version = None
-        self._location_lock = asyncio.Lock()
+        self._lock = asyncio.Lock()
+
+    def is_connected(self):
+        # The library clears tunnel.rsd when its transport-closed event fires.
+        return self.rsd is not None and self.tunnel is not None and self.tunnel.rsd is self.rsd
 
     async def close_location(self):
-        async with self._location_lock:
-            await self._close_location()
-
-    async def _close_location(self):
-        if self.simulation is not None:
+        async with self._lock:
             try:
-                await self.simulation.clear()
-            finally:
-                await self.simulation.close()
-                self.simulation = None
-        if self.dvt is not None:
-            await self.dvt.close()
-            self.dvt = None
+                if not self.is_connected():
+                    raise RuntimeError("Device disconnected. Reconnect before restoring location.")
+                if self.simulation is None:
+                    await self._open_location()
+                await self._close_location()
+            except BaseException:
+                await self._discard()
+                raise
+
+    async def _close_location(self, restore=True):
+        simulation, self.simulation = self.simulation, None
+        dvt, self.dvt = self.dvt, None
+        actions = []
+        if simulation is not None:
+            if restore:
+                actions.append(simulation.clear)
+            actions.append(simulation.close)
+        if dvt is not None:
+            actions.append(dvt.close)
+        error = None
+        for action in actions:
+            try:
+                await asyncio.wait_for(action(), timeout=3)
+            except BaseException as failure:
+                if error is None:
+                    error = failure
+        if error is not None:
+            raise error
 
     async def close(self):
-        await self.close_location()
-        if self.tunnel is not None:
-            await self.tunnel.aclose()
-            self.tunnel = None
-            self.rsd = None
-            self.udid = None
-            self.version = None
+        async with self._lock:
+            await self._close()
+
+    async def _close(self, restore=True):
+        tunnel, self.tunnel = self.tunnel, None
+        self.rsd = self.udid = self.version = None
+        try:
+            await self._close_location(restore=restore)
+        finally:
+            if tunnel is not None:
+                await asyncio.wait_for(tunnel.aclose(), timeout=5)
+
+    async def _discard(self):
+        try:
+            await self._close(restore=False)
+        except Exception as error:
+            logger.warning("Disconnected device cleanup failed: %s", error)
 
     async def connect(self, udid, version):
+        async with self._lock:
+            return await self._connect(udid, version)
+
+    async def _connect(self, udid, version):
         from pymobiledevice3.lockdown import create_using_usbmux
         from pymobiledevice3.remote.userspace_tunnel import UserspaceRsdTunnel
 
-        if self.udid == udid and self.rsd is not None:
+        if self.udid == udid and self.is_connected():
             return self.rsd.service.address
-        await self.close()
+        if self.is_connected():
+            await self._close()
+        else:
+            await self._discard()
         lockdown = await create_using_usbmux(serial=udid, autopair=True)
         try:
             if not await lockdown.get_developer_mode_status():
@@ -113,25 +156,35 @@ class DeviceSession:
         return rsd.service.address
 
     async def set_location(self, latitude, longitude):
-        async with self._location_lock:
-            if self.rsd is None:
-                raise RuntimeError("Connect an iOS device first")
-            # Some devices ignore replacement coordinates until the old simulation ends.
-            await self._close_location()
-            from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
-            from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
-
-            dvt = DvtProvider(self.rsd)
-            await dvt.connect()
+        async with self._lock:
             try:
-                simulation = LocationSimulation(dvt)
-                await simulation.connect()
+                if not self.is_connected():
+                    raise RuntimeError("Device disconnected. Reconnect before setting location.")
+                # Some devices ignore replacement coordinates until the old simulation ends.
+                await self._close_location()
+                await self._open_location()
+                await self.simulation.set(latitude, longitude)
             except BaseException:
-                await dvt.close()
+                await self._discard()
                 raise
-            self.dvt = dvt
-            self.simulation = simulation
-            await self.simulation.set(latitude, longitude)
+
+    async def _open_location(self):
+        from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
+        from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
+
+        self.dvt = DvtProvider(self.rsd)
+        await self.dvt.connect()
+        self.simulation = LocationSimulation(self.dvt)
+        await self.simulation.connect()
+
+    async def status(self):
+        async with self._lock:
+            devices = await asyncio.wait_for(device_list(), timeout=8)
+            if self.rsd is not None and (not self.is_connected() or self.udid not in devices):
+                await self._discard()
+            address = self.rsd.service.address if self.is_connected() else None
+            return {"devices": devices, "udid": self.udid,
+                    "rsd_data": f"{address[0]}:{address[1]}" if address else ""}
 
     async def enable_developer_mode(self, udid):
         from pymobiledevice3.lockdown import create_using_usbmux
@@ -259,27 +312,48 @@ def fuel_prices(fuel_type):
     return jsonify(next((item for item in prices if item.get("type") == fuel_type), None))
 
 
+device_info_cache = {}
+
+
 async def device_list():
     from pymobiledevice3.lockdown import create_using_usbmux
     from pymobiledevice3.usbmux import list_devices
 
     result = {}
+    present = set()
     for device in await list_devices():
         udid = device.serial
         connection = device.connection_type
-        try:
-            lockdown = await create_using_usbmux(serial=udid, connection_type=connection, autopair=False)
+        key = (udid, device.devid, connection)
+        present.add(key)
+        info = device_info_cache.get(key)
+        if info is None:
             try:
-                info = lockdown.short_info
-            finally:
-                await lockdown.close()
-        except Exception as error:
-            logger.warning("Device %s could not be inspected: %s", udid, error)
-            info = {"Identifier": udid, "DeviceName": "iOS device", "DeviceClass": "Unknown", "ProductVersion": "Unknown"}
+                lockdown = await asyncio.wait_for(create_using_usbmux(
+                    serial=udid, connection_type=connection, autopair=False), timeout=2)
+                try:
+                    info = dict(lockdown.short_info)
+                    device_info_cache[key] = info
+                finally:
+                    await lockdown.close()
+            except Exception as error:
+                logger.warning("Device could not be inspected: %s", error)
+                info = {"Identifier": udid, "DeviceName": "iOS device", "DeviceClass": "Unknown", "ProductVersion": "Unknown"}
         info["ConnectionType"] = connection
         info["userLocale"] = "Australia"
         result.setdefault(udid, {}).setdefault(connection, []).append(info)
+    for key in list(device_info_cache):
+        if key not in present:
+            del device_info_cache[key]
     return result
+
+
+@app.get("/device_status")
+def device_status():
+    try:
+        return jsonify(session.runner.run(session.status()))
+    except Exception as error:
+        return jsonify({"error": str(error)}), 503
 
 
 @app.get("/list_devices")
