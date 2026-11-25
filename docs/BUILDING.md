@@ -22,6 +22,7 @@ Run the checks from the repository root after installing build dependencies:
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 node tests/test_connect_ui.js
+node tests/test_device_sync.js
 node tests/test_fuel_preferences.js
 node tests/test_location_feedback.js
 .venv\Scripts\python.exe -m pip install playwright

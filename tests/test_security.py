@@ -44,6 +44,7 @@ class SecurityTests(unittest.TestCase):
             def __init__(self, **kwargs):
                 self.kwargs = kwargs
             async def aopen(self):
+                self.rsd = fake_rsd
                 return fake_rsd
             async def aclose(self):
                 return None

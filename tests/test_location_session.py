@@ -6,6 +6,8 @@ import runpy
 import sys
 import unittest
 from unittest.mock import patch
+from unittest.mock import AsyncMock
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -63,6 +65,7 @@ class LocationSessionTests(unittest.TestCase):
 
         self.session = self.namespace["session"]
         self.session.rsd = object()
+        self.session.tunnel = SimpleNamespace(rsd=self.session.rsd, aclose=AsyncMock())
         self.session.simulation = None
         self.session.dvt = None
         for target, replacement in [
@@ -109,6 +112,11 @@ class LocationSessionTests(unittest.TestCase):
         for stage in ("clear", "set"):
             with self.subTest(stage=stage):
                 self.history.reset_mock()
+                self.session.rsd = object()
+                self.session.tunnel = SimpleNamespace(rsd=self.session.rsd, aclose=AsyncMock())
+                if stage == "set":
+                    self.session.runner.run(self.session.set_location(-33.86, 151.21))
+                    self.history.reset_mock()
                 setattr(self, stage + "_error", RuntimeError(stage + " failed"))
                 try:
                     response = self.client.post("/set_location")

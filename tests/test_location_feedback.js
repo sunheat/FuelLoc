@@ -39,6 +39,7 @@ async function main() {
         fetch: async url => { requests.push(url); return response; },
         displayToast: message => toasts.push(message), console,
         updateSetLocationButtonStatus() {}, updateStopLocationButtonStatus() {},
+        populateDeviceList() {},
         setTimeout(callback, duration) { notificationTimeout = {callback, duration}; return 1; }, clearTimeout() {},
     });
     vm.runInContext(template('workspace.js'), context);

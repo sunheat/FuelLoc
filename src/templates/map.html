@@ -1475,71 +1475,64 @@ function handleKeyDown(event) {
 
 
 
-function populateDeviceList() {
-    var deviceDropdown = document.getElementById('device');
-    var connectionDropdown = document.getElementById('connection');
-    var devicesInfo = {};  // Object to store device information
-    var sudo_message = "{{ sudo_message }}";  // Ensure sudo_message is a string
-
-    // Make AJAX request to get the device list
-    fetch('/list_devices')
-        .then(response => response.json())
-        .then(data => {
-            console.log('data:', data);
-            // Clear existing options
-            deviceDropdown.innerHTML = '';
-            connectionDropdown.innerHTML = '';
-
-            // Iterate through devices (UDIDs)
-            Object.keys(data).forEach(udid => {
-                var connections = data[udid]; // Get connections for the current UDID
-
-                // Iterate over connection types for each device
-                Object.keys(connections).forEach(connectionType => {
-                    var deviceInfoArray = connections[connectionType]; // Get device info array for the current connection type
-
-                    // Iterate over device info array
-                    deviceInfoArray.forEach(deviceInfo => {
-                        var option = document.createElement('option');
-
-                        // Define the base display text
-                        let displayText = `${connectionType}: ${deviceInfo.DeviceName} - (${deviceInfo.DeviceClass} - iOS: ${deviceInfo.ProductVersion})`;
-
-                        option.text = displayText;
-                        option.value = JSON.stringify(deviceInfo);  // Convert deviceInfo object to JSON string
-
-                        // Store device information in the object
-                        devicesInfo[udid] = devicesInfo[udid] || {};
-                        devicesInfo[udid][connectionType] = deviceInfo;
-
-                        deviceDropdown.add(option);
-                    });
-                });
-            });
-
-            // Attach the devicesInfo object to the deviceDropdown for easy access later
-            if (!deviceDropdown.options.length) {
-                deviceDropdown.add(new Option('No device found — connect via USB', ''));
+async function populateDeviceList() {
+    if (deviceStatusPending || deviceActionPending || locationActionPending) return;
+    deviceStatusPending = true;
+    const revision = deviceStateRevision;
+    try {
+        const response = await fetch('/device_status', {signal: AbortSignal.timeout(15000)});
+        if (!response.ok) throw new Error('Device status is unavailable. Check the USB connection and retry.');
+        const status = await response.json();
+        if (revision !== deviceStateRevision || deviceActionPending || locationActionPending) return;
+        const dropdown = document.getElementById('device');
+        const selected = dropdown.value;
+        dropdown.innerHTML = '';
+        for (const connections of Object.values(status.devices)) {
+            for (const devices of Object.values(connections)) {
+                for (const device of devices) {
+                    const value = JSON.stringify(device);
+                    dropdown.add(new Option(`${device.ConnectionType}: ${device.DeviceName} - (iOS: ${device.ProductVersion})`, value));
+                    if (value === selected || device.Identifier === status.udid) dropdown.value = value;
+                }
             }
-            deviceDropdown.devicesInfo = devicesInfo;
-
-            // Add event listener to update value attribute of options
-            deviceDropdown.addEventListener('change', function() {
-                var selectedOption = deviceDropdown.options[deviceDropdown.selectedIndex];
-                var deviceInfo = JSON.parse(selectedOption.value); // Parse the JSON string to object
-                selectedOption.value = JSON.stringify(deviceInfo); // Update the value to match the object
-            });
-
-            // Check if sudo_message has a value and invoke displayToast if it does
-            if (sudo_message) {
-                displayToast(sudo_message);
-            }
-        })
-        .catch(error => console.error('Error fetching device list:', error));
+        }
+        if (!dropdown.options.length) dropdown.add(new Option('No device found — connect via USB', ''));
+        applyDeviceConnectionStatus(status.rsd_data);
+    } catch (error) {
+        if (revision === deviceStateRevision && !deviceActionPending && !locationActionPending) {
+            applyDeviceConnectionStatus('');
+            document.getElementById('connectError').textContent = error.message;
+        }
+    } finally {
+        deviceStatusPending = false;
+    }
 }
 
+function applyDeviceConnectionStatus(address) {
+    const rsd = document.getElementById('rsdData');
+    const lost = Boolean(rsd.value) && !address;
+    rsd.value = address;
+    const connected = Boolean(address);
+    document.getElementById('device').disabled = connected;
+    document.getElementById('connect').disabled = connected;
+    document.getElementById('connectText').innerText = connected ? 'Connected' : 'Connect Device';
+    const disconnect = document.getElementById('disconnect');
+    disconnect.style.display = connected ? 'inline-block' : 'none';
+    disconnect.disabled = false;
+    disconnect.innerText = 'Disconnect';
+    updateSetLocationButtonStatus();
+    updateStopLocationButtonStatus();
+    if (connected) document.getElementById('connectError').textContent = '';
+    if (lost) {
+        isPlaybackStopped = true;
+        document.getElementById('connectError').textContent = 'Device connection lost. Reconnect to continue; location restoration has not been confirmed.';
+    }
+}
 
-
+async function syncDevices() {
+    await populateDeviceList();
+    setTimeout(syncDevices, 5000);
+}
 
 
     // Checkbox visibility toggle
@@ -1559,6 +1552,7 @@ function populateDeviceList() {
     // Connect Device Function
 // Connect Device Function
 function connectDevice() {
+    if (deviceActionPending || locationActionPending) return;
     // Display "Connecting, please wait..."
     var connectButton = document.getElementById('connect');
     var connectTextElement = document.getElementById('connectText');
@@ -1622,6 +1616,9 @@ function connectDevice() {
         spinnerElement.style.display = 'inline-block'; // Display the spinner
     }
 
+    deviceActionPending = true;
+    deviceStateRevision++;
+    connectButton.disabled = true;
     // Make AJAX request to notify the server about the command
     fetch('/connect_device', {
         method: 'POST',
@@ -1746,7 +1743,11 @@ function connectDevice() {
                 connectButton.disabled = false;  // Enable the button
             }
         })
-        .finally(() => { spinnerElement.style.display = 'none'; });
+        .finally(() => {
+            spinnerElement.style.display = 'none';
+            deviceActionPending = false;
+            populateDeviceList();
+        });
 }
 
 
@@ -1766,51 +1767,29 @@ function showModalWifiModeRequired() {
 
 
     /// Function to disconnect device
-    function disconnectDevice() {
-        var connectTextElement = document.getElementById('connectText');
-        var connectButton = document.getElementById('connect');
-        var disconnectButton = document.getElementById('disconnect');
-        var deviceDropdown = document.getElementById('device');
-        stopLocation(true);
-        // Use navigator.sendBeacon to make the POST request without waiting for a response
-        const data = JSON.stringify({});
-        //navigator.sendBeacon('/stop_tunnel', data);
-        console.log('Disconnect - Clearing');
-
-        var setLocationButton = document.getElementById('set-location');
-        var stopLocationButton = document.getElementById('stop-location');
-        stopLocationButton.disabled = true;
-        setLocationButton.disabled = true;
-
-        // Enable the device dropdown
-        if (deviceDropdown) {
-            deviceDropdown.disabled = false;
-        }
-
-        // Update Disconnect button text and show Connect button
-        if (disconnectButton) {
-            disconnectButton.innerText = "Disconnecting, Please wait...";
-            disconnectButton.style.display = 'none';
-        }
-
-        // Hide rsdData text box
-        var rsdDataElement = document.getElementById('rsdData');
-        if (rsdDataElement) {
-            rsdDataElement.value = '';
-            rsdDataElement.style.display = 'none';
-        }
-
-        // Reset connectTextElement
-        if (connectTextElement) {
-            connectTextElement.innerText = "Connect Device";
-        }
-
-        // Enable Connect button
-        if (connectButton) {
-            connectButton.disabled = false;
+    async function disconnectDevice() {
+        if (deviceActionPending || locationActionPending) return;
+        deviceActionPending = true;
+        deviceStateRevision++;
+        document.getElementById('connect').disabled = true;
+        document.getElementById('disconnect').disabled = true;
+        document.getElementById('set-location').disabled = true;
+        document.getElementById('stop-location').disabled = true;
+        try {
+            const response = await fetch('/stop_tunnel', {method: 'POST'});
+            if (!response.ok) throw new Error(await response.text());
+            applyDeviceConnectionStatus('');
+            document.getElementById('connectError').textContent = '';
+            showWorkspaceNotification('Device disconnected');
+        } catch (error) {
+            applyDeviceConnectionStatus('');
+            document.getElementById('connectError').textContent = 'Disconnected. Location restoration could not be confirmed. Reconnect and use Stop Location.';
+            showLocationResult(true, {message: 'Location restoration could not be confirmed. Reconnect and use Stop Location.', technical: String(error)});
+        } finally {
+            deviceActionPending = false;
+            await populateDeviceList();
         }
     }
-
 
 
     let fuelRequestId = 0;
@@ -1918,7 +1897,7 @@ function setLocationArrows() {
         var rsdDataElement = document.getElementById('rsdData');
         var coordinatesInput = document.getElementById('coordinates');
         var enableButton = rsdDataElement.value.trim() !== '' && coordinatesInput.value.trim() !== '';
-        setLocationButton.disabled = locationActionPending || !enableButton;
+        setLocationButton.disabled = locationActionPending || deviceActionPending || !enableButton;
     }
 
     // Function to enable or disable the Stop Location button based on conditions
@@ -1926,7 +1905,7 @@ function setLocationArrows() {
         var stopLocationButton = document.getElementById('stop-location');
         var rsdDataElement = document.getElementById('rsdData');
         var enableButton = rsdDataElement.value.trim() !== '';
-        stopLocationButton.disabled = locationActionPending || !enableButton;
+        stopLocationButton.disabled = locationActionPending || deviceActionPending || !enableButton;
     }
 
     function exitApp() {
@@ -2121,7 +2100,7 @@ function continueAfterDeveloperModeRequired() {
     if (document.getElementById('enableFuelPrices').checked) handleFuelTypeChange();
     document.getElementById('rsdData').addEventListener('change', updateSetLocationButtonStatus);
     document.getElementById('coordinates').addEventListener('input', updateSetLocationButtonStatus);
-    populateDeviceList();
+    syncDevices();
     updateStopLocationButtonStatus();  // Add this line to update the Stop Location button status
     // Add event listener for keydown event
     document.addEventListener('keydown', handleKeyDown);

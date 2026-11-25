@@ -26,6 +26,8 @@ async function checkFailure(fetch, expectedError) {
         showModalTimeout() {},
         showModalDeveloperModeRequired() {},
         showPairRecordModal() {},
+        deviceActionPending: false, locationActionPending: false, deviceStateRevision: 0,
+        populateDeviceList() {},
     };
     vm.runInNewContext(html.slice(start, end), context);
     context.connectDevice();

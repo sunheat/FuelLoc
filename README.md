@@ -61,6 +61,8 @@ If Apple Maps remains centered on the previous place, tap its current-location b
 
 Stop simulation before unplugging the phone. If a device operation fails, read the dialog's recovery guidance and expandable technical details. Reconnect and retry **Stop Location** if necessary. Closing the browser window alone leaves the local controller running; use **Exit** for a clean shutdown.
 
+While the workspace is open, FuelLoc synchronizes the device list and connection status every five seconds. A lost connection stops route playback and releases the stale session. After the phone reappears, choose **Connect** to rebuild the tunnel, then retry **Simulate Location** or **Stop Location**. Reconnection does not automatically resume simulation. A broken physical link can still prevent restoration; check the phone's map after reconnecting.
+
 Hold **Ctrl** while scrolling to zoom the map, or use its **+ / −** controls. Ordinary scrolling does not zoom. **Saved places**, beside Search, lets you save, name, preview, and delete points. See [local data and retention](docs/LOCAL_STATE.md) for details.
 
 ## Fuel prices and network use
