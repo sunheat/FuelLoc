@@ -12,7 +12,7 @@ A portable Windows app for testing an iPhone's location and browsing reported Au
 
 FuelLoc is a Windows-focused fork of GeoPort by davesc63, licensed under [GPLv3](LICENSE).
 
-**Version 1.0.1** fixes repeated location changes without requiring a manual stop between points. See the [release notes](docs/releases/1.0.1.md).
+**Current version: 1.0.2.** See the [release notes](docs/releases/1.0.2.md).
 
 ![FuelLoc desktop workspace](docs/images/workspace.png)
 
@@ -40,7 +40,7 @@ FuelLoc deliberately leaves driver installation and system-service management to
 
 ## Download and first launch
 
-1. Download **[FuelLoc-1.0.1-windows-x64.zip](https://github.com/sunheat/FuelLoc/releases/download/fuelloc-v1.0.1/FuelLoc-1.0.1-windows-x64.zip)** from the [latest release](https://github.com/sunheat/FuelLoc/releases/latest). GitHub's **Source code** downloads are for developers and do not contain an EXE.
+1. Download **[FuelLoc-1.0.2-windows-x64.zip](https://github.com/sunheat/FuelLoc/releases/download/fuelloc-v1.0.2/FuelLoc-1.0.2-windows-x64.zip)** from the [latest release](https://github.com/sunheat/FuelLoc/releases/latest). GitHub's **Source code** downloads are for developers and do not contain an EXE.
 2. Extract the ZIP completely to a writable folder. Open the extracted `FuelLoc` folder and double-click **`FuelLoc.exe`**. Keep the `_internal` folder beside the EXE; the EXE cannot run alone or directly inside the ZIP.
 3. The setup window checks the local app, browser, Apple support, and phone connection. Choose **Enter app** once the local app is ready. Failed device checks do not prevent browsing the workspace; fix them before connecting a phone. Use **Recheck** after changing prerequisites.
 
@@ -89,7 +89,7 @@ Report reproducible problems through [GitHub Issues](https://github.com/sunheat/
 
 ## Build and contribute
 
-See [BUILDING.md](docs/BUILDING.md) for Python 3.12 x64 setup, the Windows build command, tests, and release packaging. Maintainers should follow the [release checklist](docs/RELEASE_CHECKLIST.md). See the [1.0.1 release notes](docs/releases/1.0.1.md) and [initial release notes](docs/releases/1.0.0.md) for version history.
+See [BUILDING.md](docs/BUILDING.md) for Python 3.12 x64 setup, the Windows build command, tests, and release packaging. Maintainers should follow the [release checklist](docs/RELEASE_CHECKLIST.md). See the [1.0.2 release notes](docs/releases/1.0.2.md), [1.0.1 release notes](docs/releases/1.0.1.md), and [initial release notes](docs/releases/1.0.0.md) for version history.
 
 ## Support and license
 

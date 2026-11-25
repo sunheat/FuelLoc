@@ -7,7 +7,7 @@ Use Windows x64, Git, and Python **3.12 x64** with Tcl/Tk support (the normal py
 ```powershell
 git clone https://github.com/sunheat/FuelLoc.git
 cd FuelLoc
-git checkout fuelloc-v1.0.1
+git checkout fuelloc-v1.0.2
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
@@ -41,18 +41,18 @@ powershell -ExecutionPolicy Bypass -File scripts/package.ps1
 
 This rebuilds the app and creates the following in `dist/release/`:
 
-- `FuelLoc-1.0.1-windows-x64.zip`: the complete `FuelLoc/` folder, executable, runtime, license, dependency notices, user instructions, release notes, and build information.
-- `FuelLoc-1.0.1-source.zip`: tracked source at the recorded commit, including build scripts and license. Local configuration and user data are excluded.
+- `FuelLoc-1.0.2-windows-x64.zip`: the complete `FuelLoc/` folder, executable, runtime, license, dependency notices, user instructions, release notes, and build information.
+- `FuelLoc-1.0.2-source.zip`: tracked source at the recorded commit, including build scripts and license. Local configuration and user data are excluded.
 - `SHA256SUMS.txt`: SHA-256 hashes of both archives.
 
 Version names come from `APP_VERSION` in `src/main.py`. Windows executable metadata in `packaging/windows-version-info.txt` must match. No script creates a tag, creates a GitHub Release, uploads files, signs the EXE, or publishes anything.
 
-The FuelLoc 1.0.1 release tag is `fuelloc-v1.0.1`. The existing `v1.0.1` tag belongs to inherited upstream history and must not be moved or reused.
+The FuelLoc 1.0.2 release tag is `fuelloc-v1.0.2`. The existing `v1.0.1` and `v1.0.2` tags belong to inherited upstream history and must not be moved or reused.
 
 Extract the portable archive into a fresh folder and test that copy before publication. To compare a download with `SHA256SUMS.txt`:
 
 ```powershell
-Get-FileHash .\FuelLoc-1.0.1-windows-x64.zip -Algorithm SHA256
+Get-FileHash .\FuelLoc-1.0.2-windows-x64.zip -Algorithm SHA256
 ```
 
 Follow the [release checklist](RELEASE_CHECKLIST.md) when publishing. Attach both archives and `SHA256SUMS.txt` to a release at the matching source commit.

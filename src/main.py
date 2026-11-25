@@ -30,7 +30,7 @@ logger = logging.getLogger("FuelLoc")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 app = Flask(__name__)
 FUEL_API = "https://projectzerothree.info/api.php?format=json"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 PORT = 54321
 chosen_port = PORT
 fuel_data = None

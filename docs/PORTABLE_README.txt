@@ -1,4 +1,4 @@
-FuelLoc 1.0.1 - Windows x64 portable app
+FuelLoc 1.0.2 - Windows x64 portable app
 
 Extract the entire ZIP, then run FuelLoc.exe inside the FuelLoc folder.
 Keep the _internal folder beside the EXE. Python is not required.
@@ -17,7 +17,7 @@ FuelLoc runs without an administrator prompt and does not install drivers or
 create a virtual network adapter. Apple driver/service setup is deliberately
 separate and may require administrator permission. Official download and
 troubleshooting links are collected here:
-https://github.com/sunheat/FuelLoc/blob/fuelloc-v1.0.1/docs/APPLE_DEVICE_SETUP.md
+https://github.com/sunheat/FuelLoc/blob/fuelloc-v1.0.2/docs/APPLE_DEVICE_SETUP.md
 
 The original project's device telemetry, extra visit reporting, remote
 broadcast/version requests, and IP-geolocation lookup have been removed.

@@ -23,7 +23,7 @@
 
 ## Publication
 
-- Tag the packaged source revision without moving an existing tag. FuelLoc 1.0.1 uses `fuelloc-v1.0.1` because `v1.0.1` belongs to inherited upstream history.
+- Tag the packaged source revision without moving an existing tag. FuelLoc 1.0.2 uses `fuelloc-v1.0.2` because `v1.0.2` belongs to inherited upstream history.
 - Publish a GitHub Release with the Windows portable ZIP, matching source ZIP, and checksum file.
 - Set the current stable release as latest and confirm the public asset names, sizes, and hashes.
 - Retain earlier releases for reference and link superseded releases to the current version when appropriate.
