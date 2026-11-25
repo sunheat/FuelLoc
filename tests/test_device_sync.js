@@ -49,6 +49,12 @@ vm.runInContext(scan + disconnect, context);
     await context.disconnectDevice();
     assert(requests.some(([url, method]) => url === '/stop_tunnel' && method === 'POST'),
         'Manual disconnect must actually close the tunnel');
+    disconnectOK = false;
+    let restorationError;
+    context.showLocationResult = (restoring, error) => { restorationError = error; };
+    await context.disconnectDevice();
+    assert.match(restorationError.message, /restoration could not be confirmed/i);
+    assert.equal(elements.rsdData.value, '');
 
     // A poll started before Connect must never overwrite that newer operation.
     let resolveStatus;

@@ -98,7 +98,6 @@ class DeviceRecoveryTests(unittest.TestCase):
 
     def test_request_timeout_cancels_device_work_and_releases_resources(self):
         self.old_tunnel.rsd = self.rsd
-        self.simulation.clear.side_effect = lambda: None
 
         async def stalled_clear():
             await asyncio.Event().wait()
@@ -109,6 +108,21 @@ class DeviceRecoveryTests(unittest.TestCase):
         self.assertIsNone(self.session.rsd)
         self.dvt.close.assert_awaited_once()
         self.old_tunnel.aclose.assert_awaited_once()
+
+    def test_polling_reuses_metadata_until_a_new_usb_attachment(self):
+        first = SimpleNamespace(serial="test-device", devid=1, connection_type="USB")
+        replugged = SimpleNamespace(serial="test-device", devid=2, connection_type="USB")
+        lockdown = SimpleNamespace(short_info={"Identifier": "test-device"}, close=AsyncMock())
+        create = AsyncMock(return_value=lockdown)
+        enumerate_devices = AsyncMock(side_effect=[[first], [first], [replugged]])
+        device_list = self.namespace["device_list"]
+        with patch.dict(device_list.__globals__, device_info_cache={}), patch(
+            "pymobiledevice3.usbmux.list_devices", enumerate_devices,
+        ), patch("pymobiledevice3.lockdown.create_using_usbmux", create):
+            for _ in range(3):
+                self.assertIn("test-device", self.session.runner.run(device_list()))
+        self.assertEqual(enumerate_devices.await_count, 3)
+        self.assertEqual(create.await_count, 2, "Steady-state polls must not reopen lockdown")
 
 
 if __name__ == "__main__":
